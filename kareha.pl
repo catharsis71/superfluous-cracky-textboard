@@ -366,7 +366,7 @@ sub post_stuff($$$$$$$$$$$$)
 
 	# process the tripcode
 	my ($trip,$capped);
-	($name,$trip)=process_tripcode($name,TRIPKEY,SECRET,CHARSET);
+	($name,$trip)=process_tripcode($name,TRIPKEY,SECRET,CHARSET,1);
 	my %capped_trips=CAPPED_TRIPS;
 	$capped=$capped_trips{$trip};
 
