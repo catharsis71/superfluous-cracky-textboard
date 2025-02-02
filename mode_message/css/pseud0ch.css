@@ -54,7 +54,7 @@ ol p:last-child, ul p:last-child {
 
 .outerbox {
 	background: #CCFFCC;
-	border: 1px outset grey;
+	border: 1px outset white;
 	padding: 7px;
 	margin-bottom: 1em;
 	margin-left: 2.5%;
@@ -62,7 +62,7 @@ ol p:last-child, ul p:last-child {
 	clear: both;
 }
 .innerbox {
-	border: 1px inset grey;
+	border: 1px inset white;
 	padding: 6px;
 }
 #titlebox h1 {
@@ -76,8 +76,13 @@ ol p:last-child, ul p:last-child {
 }
 #titlebox .threadnavigation {
 	position: absolute;
-	right: 12px;
+	right: 2.5%;
+	padding-right: 20px;
 	top: 12px;
+}
+#titlebox div>.threadnavigation {
+	right: 12px;
+	padding-right: 0px;
 }
 #threadbox .threadlink {
 	padding-right: 0.5em;
@@ -105,7 +110,7 @@ body.threadpage #threads {
 	color: #000000;
 	padding: 7px;
 	margin-bottom: 2em;
-	border: 1px outset grey;
+	border: 1px outset white;
 	clear: both;
 }
 
@@ -116,7 +121,7 @@ body.mainpage #threads {
 	color: #000000;
 	padding: 7px;
 	margin-bottom: 2em;
-	border: 1px outset grey;
+	border: 1px outset white;
 	clear: both;
 }
 
@@ -133,9 +138,9 @@ body.threadpage #threads h1 {
 	text-align: center;
 	padding: 0px;
 	margin: 0px;
-	border-top: 1px inset grey;
-	border-left: 1px inset grey;
-	border-right: 1px inset grey;
+	border-top: 1px inset white;
+	border-left: 1px inset white;
+	border-right: 1px inset white;
 }
 
 body.backlogpage #threads h1 {
@@ -148,9 +153,9 @@ body.threadpage #threadlist {
 	font-family: serif;
 	margin: 0px 0px 7px 0px;
 	padding: 6px;
-	border-left: 1px inset grey;
-	border-right: 1px inset grey;
-	border-bottom: 1px inset grey;
+	border-left: 1px inset white;
+	border-right: 1px inset white;
+	border-bottom: 1px inset white;
 }
 
 body.backlogpage #threadlist {
@@ -183,7 +188,7 @@ body.backlogpage #threadlist {
 	margin-right: 2.5%;
 	position: relative;
 	background: #EFEFEF;
-	border: 1px outset grey;
+	border: 1px outset white;
 	padding: 7px;
 	margin-bottom: 2em;
 	clear: both;
@@ -191,8 +196,9 @@ body.backlogpage #threadlist {
 .mainpage #posts .sagethread {
 	margin-left: 2.5%;
 	margin-right: 2.5%;
+	position: relative;
 	background: #EFEFEF;
-	border: 2px inset grey;
+	border: 2px inset white;
 	padding: 9px;
 	margin-bottom: 2em;
 	clear: both;
@@ -203,9 +209,9 @@ body.backlogpage #threadlist {
 	font-weight: bold;
 	margin: 0px 0px -1px 0px;
 	padding: 1em 0em 0em 0.3em;
-	border-top: 1px inset grey;
-	border-left: 1px inset grey;
-	border-right: 1px inset grey;
+	border-top: 1px inset white;
+	border-left: 1px inset white;
+	border-right: 1px inset white;
 }
 .mainpage #posts h2 a {
 	color: #CC1105;
@@ -228,8 +234,13 @@ body.backlogpage #threadlist {
 }
 #posts .threadnavigation {
 	position: absolute;
-	right: 16px;
+	right: 2.5%;
+	padding-right: 20px;
 	top: 10px;
+}
+#posts div>.threadnavigation {
+	right: 12px;
+	padding-right: 0;
 }
 #posts .replies {
 	clear: both;
@@ -237,8 +248,8 @@ body.backlogpage #threadlist {
 }
 .mainpage #posts .replies {
 	padding: 3px;
-	border-left: 1px inset grey;
-	border-right: 1px inset grey;
+	border-left: 1px inset white;
+	border-right: 1px inset white;
 }
 #posts .allreplies, #posts .firstreply, #posts .finalreplies {
 }
@@ -286,9 +297,13 @@ body.backlogpage #threadlist {
 }
 #posts .deletebutton {
 	font-size: small;
-	float: right;
-	position: relative;
-	top: -1.3em;
+	position: absolute;
+	right: 2.5%;
+	padding-right: 8px;
+}
+#posts h3>.deletebutton {
+	right: 8px;
+	padding-right: 0;
 }
 #posts img.thumb, #posts a img {
 	border-width: 1px;
@@ -298,7 +313,7 @@ body.backlogpage #threadlist {
 #posts .nothumbnail {
 	float: left;
 	display: inline; /* stupid IE bug */
-	border: 1px inset grey;
+	border: 1px inset white;
 	text-align: center;
 	padding: 1em 0.5em 1em 0.5em;
 	margin: 0.5em 2em 0.5em 2em;
@@ -324,7 +339,7 @@ body.backlogpage #threadlist {
 	background: #EFEFEF;
 	color: #000000;
 	font-family: serif;
-	margin: 0px;
+	margin: 0;
 }
 #posts form small a {
 	color: #000000;
@@ -339,10 +354,10 @@ body.backlogpage #threadlist {
 	border-top: 2px ridge white;
 }
 .mainpage #posts form {
-	padding: 3px;
-	border-left: 1px inset grey;
-	border-right: 1px inset grey;
-	border-bottom: 1px inset grey;
+	padding: 6px 6px 1em 6px;
+	border-left: 1px inset white;
+	border-right: 1px inset white;
+	border-bottom: 1px inset white;
 }
 #posts input[type=submit] {
 }

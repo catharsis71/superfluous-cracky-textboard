@@ -1,6 +1,7 @@
 html {
 	padding: 0px;
 	margin: 0px;
+	background: #FFFFFF;
 }
 
 body {
@@ -68,8 +69,11 @@ h1 {
 }
 #titlebox .threadnavigation {
 	position: absolute;
-	right: 0.3em;
+	right: 0.7em;
 	top: 0.7em;
+}
+#titlebox div>.threadnavigation {
+        right: 0.3em;
 }
 #rules {
 	padding: 0em 0.5em;

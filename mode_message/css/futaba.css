@@ -90,8 +90,11 @@ h1 {
 }
 #titlebox .threadnavigation {
 	position: absolute;
-	right: 0.3em;
+	right: 0.8em;
 	top: 0.9em;
+}
+#titlebox div>.threadnavigation {     
+        right: 0.3em;
 }
 #rules, #threadbox .innerbox {
 	background: #F0E0D6;

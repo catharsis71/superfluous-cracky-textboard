@@ -77,6 +77,8 @@ Edit: <loop $includes>
 	-
 	<if !$closed><a href="<var $path><const KAREHA_SCRIPT>?task=closethread&amp;thread=<var $thread>&amp;state=1&amp;&amp;admin=<var $adminpass>&amp;r=1">close</a></if>
 	<if $closed><a href="<var $path><const KAREHA_SCRIPT>?task=closethread&amp;thread=<var $thread>&amp;state=0&amp;&amp;admin=<var $adminpass>&amp;r=1">open</a></if>
+	-
+	<a href="<var $path><const KAREHA_SCRIPT>?task=deletethread&amp;thread=<var $thread>&amp;&amp;admin=<var $adminpass>&amp;r=1">delete</a>
 	</div>
 
 	<loop $posts>
@@ -326,7 +328,7 @@ sub do_save($$)
 
 sub print_http_header()
 {
-	print "Content-Type: ".get_xhtml_content_type(CHARSET,USE_XHTML)."\n";
+	print "Content-Type: ".get_xhtml_content_type(CHARSET,0)."\n";
 	print "Expires: Mon, 26 Jul 1997 05:00:00 GMT\n";
 	print "Cache-Control: max-age=0; must-revalidate; no-cache\n";
 	print "Pragma: no-cache\n";

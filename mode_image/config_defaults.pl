@@ -113,7 +113,7 @@ BEGIN {
 		'p'=>{},'br'=>{empty=>1},'blockquote'=>{},
 	)} unless(defined &ALLOWED_HTML);
 
-	eval "use constant KAREHA_VERSION => '3.0.8'" unless(defined &KAREHA_VERSION);
+	eval "use constant KAREHA_VERSION => '3.0.9'" unless(defined &KAREHA_VERSION);
 }
 
 1;

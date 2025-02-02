@@ -60,8 +60,12 @@ h1 {
 }
 #titlebox .threadnavigation {
 	position: absolute;
-	right: 4px;
+	right: 12px;
 	top: 4px;
+	float: right;
+}
+#titlebox div>.threadnavigation {     
+        right: 4px;
 }
 #rules, #threadbox .innerbox {
 	background-color: inherit;

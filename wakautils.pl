@@ -1,4 +1,4 @@
-# wakautils.pl v7.13
+# wakautils.pl v7.14
 
 use strict;
 
@@ -9,6 +9,7 @@ my $has_md5=0;
 eval 'use Digest::MD5 qw(md5)';
 $has_md5=1 unless $@;
 
+use constant MAX_UNICODE => 1114111;
 
 #
 # HTML utilities
@@ -148,7 +149,7 @@ sub sanitize_html($%)
 	my $entry;
 	while($entry=pop @stack) { $clean.="</$entry>" }
 
-	return $clean;
+	return clean_entities($clean);
 }
 
 sub describe_allowed(%)
@@ -212,7 +213,8 @@ sub do_wakabamark($;$$)
 		}
 		$simplify=0;
 	}
-	return $res;
+
+	return clean_entities($res);
 }
 
 sub do_spans($@)
@@ -343,6 +345,17 @@ sub clean_string($)
 	$str=~s/&amp;(\#[0-9]+;)/&$1/g;
 	$str=~s/&amp;(\#x[0-9a-f]+;)/&$1/gi;
 
+	return clean_entities($str);
+}
+
+sub clean_entities($)
+{
+	my ($str)=@_;
+
+	# strip large unicode entities
+	$str=~s/&\#([0-9]+);/$1<=MAX_UNICODE?"&#$1;":""/ge;
+	$str=~s/&\#x([0-9a-f]+);/hex($1)<=MAX_UNICODE?"&#x$1;":""/gei; # haado!
+
 	return $str;
 }
 
@@ -364,8 +377,7 @@ sub urlenc($)
 sub clean_path($)
 {
 	my ($str)=@_;
-	$str=~s!([^\w/._\- ])!"%".sprintf("%02x",ord $1)!sge;
-	$str=~s/ /+/sg;
+	$str=~s!([^\w/._\-])!"%".sprintf("%02x",ord $1)!sge;
 	return $str;
 }
 
@@ -398,7 +410,7 @@ sub js_string($)
 
 	$str=~s/\\/\\\\/g;
 	$str=~s/'/\\'/g;
-	$str=~s/([\x00-\x1f\x80-\xff])/sprintf "\\x%02x",ord($1)/ge;
+	$str=~s/([\x00-\x1f\x80-\xff<>&])/sprintf "\\x%02x",ord($1)/ge;
 	$str=~s/([\x{100}-\x{ffff}])/sprintf "\\u%04x",ord($1)/ge;
 	$str=~s/(\r\n|\r|\n)/\\n/g;
 
