@@ -96,7 +96,7 @@ BEGIN {
 
 	eval "use constant FILETYPES => ()" unless(defined &FILETYPES);
 
-	eval "use constant KAREHA_VERSION => '2.0.3'" unless(defined &KAREHA_VERSION);
+	eval "use constant KAREHA_VERSION => '2.0.4'" unless(defined &KAREHA_VERSION);
 }
 
 1;
