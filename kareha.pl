@@ -319,7 +319,6 @@ sub post_stuff($$$$$$$$$$$$)
 	make_error(S_UNUSUAL) if $name=~/[\n\r]/;
 	make_error(S_UNUSUAL) if $link=~/[\n\r]/;
 	make_error(S_UNUSUAL) if $title=~/[\n\r]/;
-	make_error(S_UNUSUAL) if $markup and !grep $markup eq $_,MARKUP_FORMATS;
 
 	# check for excessive amounts of text
 	make_error(sprintf(S_TOOLONG,"name",length($name)-&MAX_FIELD_LENGTH)) if length($name)>MAX_FIELD_LENGTH;
@@ -469,7 +468,7 @@ sub format_comment($$$)
 {
 	my ($comment,$markup,$thread)=@_;
 
-	$markup=DEFAULT_MARKUP unless $markup;
+	$markup=DEFAULT_MARKUP unless grep $markup eq $_,MARKUP_FORMATS;
 
 	if($markup eq "none") { $comment=simple_format($comment,$thread) }
 	elsif($markup eq "html") { $comment=html_format($comment,$thread) }
@@ -894,7 +893,7 @@ sub filter_post_ranges($$;$)
 			$start=1 if $start<1;
 			push @postnums,($start..$total);
 		}
-		elsif($range=~/^r([0-9]*)$/i)
+		elsif($range=~/^r([0-9]{1,4})$/i)
 		{
 			my $num=($1 or 1);
 			push @postnums,int (rand $total)+1 for(1..$num);
@@ -916,6 +915,7 @@ sub filter_post_ranges($$;$)
 		}
 	}
 
+	@postnums=@postnums[0..999] if @postnums>1000;
 	@postnums=(1..$total) unless @postnums;
 
 	if($ranges=~/^[0-9]*-[0-9]*$/ or $ranges=~/^l[0-9]+$/i)

@@ -458,7 +458,7 @@ sub js_hash(%)
 use constant CACHEFILE_PREFIX => 'cache-'; # you can make this a directory (e.g. 'cachedir/cache-' ) if you'd like
 use constant FORCETIME => '0.04'; 	# If the cache is less than (FORCETIME) days old, don't even attempt to refresh.
                                     # Saves everyone some bandwidth. 0.04 days is ~ 1 hour. 0.0007 days is ~ 1 min.
-use IO::Socket::INET;
+eval 'use IO::Socket::INET'; # Will fail on old Perl versions!
 
 sub get_http($;$$$)
 {

@@ -12,7 +12,17 @@ BEGIN { require 'config_defaults.pl'; }
 BEGIN { require 'wakautils.pl'; }
 BEGIN { require 'kareha.pl'; }
 
+
 use constant KAREHA_SCRIPT => 'kareha.pl';
+
+
+
+use constant MASK_PASSWD => make_key("mask",SECRET,16);
+use constant IP_PASSWD => rc4(null_string(32),"ip".SECRET);
+use constant PASS_PASSWD => rc4(null_string(32),"cryptpass".SECRET);
+use constant ENCODED_PASS => encode_admin_pass(ADMIN_PASS);
+
+
 
 use constant ADMIN_HEAD_INCLUDE => q{<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
@@ -110,7 +120,7 @@ Edit: <loop $editable>
 		</label>
 		- <a href="<var $path><const KAREHA_SCRIPT>?task=delete&amp;delete=<var $thread>,<var $num>&amp;password=<var $adminpass>&amp;r=1">delete</a>
 		<if $filename>- <a href="<var $path><const KAREHA_SCRIPT>?task=delete&amp;delete=<var $thread>,<var $num>&amp;fileonly=1&amp;password=<var $adminpass>&amp;r=1">delete file</a></if>
-		<if ADMIN_BAN_FILE>- <a href="<var $self>/ban?id=<var $masked_ip>" onclick="return banclick(this)">ban</a></if>
+		<if ADMIN_BAN_FILE>- <a href="<var $self>/ban?admin=<var $adminpass>&amp;id=<var $masked_ip>" onclick="return banclick(this)">ban</a></if>
 		</div>
 		<div class="posttext"><var $abbreviation or $text></div>
 		</div>
@@ -148,6 +158,7 @@ or you can get the <code>spam.txt</code> file directly <a href="http://wakaba.c3
 <textarea name="contents" cols="80" rows="45"><var clean_string($contents)></textarea>
 <br />
 <input type="hidden" name="filename" value="<var clean_string($filename)>" />
+<input type="hidden" name="admin" value="<const ENCODED_PASS>" />
 <input type="submit" value="Save" />
 </form>
 
@@ -207,13 +218,6 @@ Admin password:
 
 
 
-use constant MASK_PASSWD => make_key("mask",SECRET,16);
-use constant IP_PASSWD => rc4(null_string(32),"ip".SECRET);
-use constant PASS_PASSWD => rc4(null_string(32),"cryptpass".SECRET);
-use constant ENCODED_PASS => encode_admin_pass(ADMIN_PASS);
-
-
-
 
 my @threads=get_threads(1);
 my %log=read_log();
@@ -262,13 +266,19 @@ elsif($edit)
 
 	die "Not an editable file" unless grep { $_ eq $filename } (ADMIN_EDITABLE_FILES);
 
-	if(defined $contents) { do_save($filename,$contents) }
+	if(defined $contents)
+	{
+		die unless $query->param('admin') eq ENCODED_PASS;
+		do_save($filename,$contents);
+	}
 	else { show_edit($filename) }
 }
 elsif($ban)
 {
 	my $id=$query->param("id");
 	my $reason=$query->param("reason");
+
+	die unless $query->param('admin') eq ENCODED_PASS;
 
 	do_ban($id,$reason);
 }

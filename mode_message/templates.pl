@@ -43,7 +43,7 @@ use constant S_POSTERNAME => 'Name:';
 use constant S_DELETE => 'Del';
 use constant S_USERDELETE => 'Post deleted by user.';
 use constant S_MODDELETE => 'Post deleted by moderator.';
-use constant S_CLOSEDTHREAD => 'This thread has been closed. You can not post in this thread any longer.';
+use constant S_CLOSEDTHREAD => 'This thread has been closed. You cannot post in this thread any longer.';
 use constant S_SPAMTRAP => 'Leave these fields empty (spam trap): ';
 
 use constant S_MOREOPTS => "More options...";
@@ -176,7 +176,7 @@ use constant POSTING_FORM_TEMPLATE => compile_template(q{
 		<label><input type="checkbox" name="savemarkup" /> <const S_SAVE_FORMATTING></label>
 		&nbsp;&nbsp; <input type="button" value="Preview post" onclick="preview_post('<var $formid>','<var $thread>')" />
 		<br /><small></small>
-		<div id="preview<var $thread>" class="replytext" style="display:none">Lorem ipsum dolor</div>
+		<div id="preview<var $thread>" class="replytext" style="display:none"></div>
 	</td>
 </tr>
 
