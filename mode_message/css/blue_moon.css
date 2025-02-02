@@ -1,0 +1,349 @@
+html {
+	padding: 0px;
+	margin: 0px;
+}
+body {
+	padding: 8px;
+	margin: 0px;
+	background-color: #6B7B8D;
+	color: #FFFFFF;
+	font-family: "Trebuchet MS", serif;
+}
+a {
+	color:#AFB9C5;
+}
+a:visited {
+	color:#9DA6B0;
+}
+a:hover {
+	color:#EEEEEE;
+}
+form {
+	margin: 0px;
+}
+ol ul, ul ol, ul ul, ol ol {
+	margin-top: 0;
+	margin-bottom: 0;
+}
+ol p:first-child, ul p:first-child {
+	margin-top: 0;
+}
+ol p:last-child, ul p:last-child {
+	margin-bottom: 0;
+}
+
+
+
+#topbar {
+	margin: 0.3em;
+	margin-bottom: 1em;
+	text-align: right;
+	font-size: small;
+}
+#navbar, #managerbar, #stylebar {
+	display: inline;
+	white-space: nowrap;
+	line-height: 2em;
+	background-color: #49525D;
+	padding: 3px 0px 3px 0px;
+	margin-left: 1em;
+	border: 1px solid #49525D;
+	-moz-border-radius: 4px;
+}
+#navbar strong, #managerbar strong , #stylebar strong {
+	background-color: #49525D;
+	padding: 3px;
+	color: #EEEEEE;
+	font-weight: bold;
+}
+
+#navbar a, #managerbar a, #stylebar a {
+	padding: 3px;
+}
+
+
+
+#threads {
+	background-color: #49525D;
+	color: #EEEEEE;
+	padding: 4px;
+	margin-bottom: 2em;
+	-moz-border-radius: 6px;
+	clear: both;
+}
+#threads h1 {
+	color: #EEEEEE;
+	text-align: center;
+	font-size: 2em;
+	font-weight: bold;
+	padding: 0px;
+	margin: 0px;
+}
+#threadlist {
+	background-color: inherit;
+	font-size: .8em;
+	margin: 3px;
+	margin-bottom: 1em;
+	padding: 3px;
+}
+#threadlist .threadlink {
+	padding-right: 0.5em;
+}
+#threadlist strong {
+	text-align: right;
+	font-weight: bold;
+}
+#oldthreadlist {
+	background-color: #FFFFFF;
+	font-family: serif;
+	margin: 3px;
+	padding: 3px;
+	-moz-border-radius: 4px;
+}
+#oldthreadlist .threadlink {
+	display: block;
+}
+#oldthreadlist .manage {
+	font-size: small;
+	margin-left: 1em;
+}
+#threads form
+{
+	background-color: #8C9FB4;
+	color: #49525D;
+	margin: 3px;
+	padding: 3px;
+	-moz-border-radius: 4px;
+	font-weight: bold;
+}
+#threads input, #threads textarea {
+	background-color: #EEEEEE;
+	border-top: 1px solid #49525D;
+	border-bottom: 1px solid #B6C2CF;
+	border-left: 1px solid #49525D;
+	border-right: 1px solid #B6C2CF;
+}
+#threads textarea {
+	-moz-border-radius: 4px;
+}
+#threads input[type=submit] {
+	background-color: #000000;
+	color: #FFFFFF;
+	font-weight: bold;
+}
+.threadcaptcha {
+	color: #000000;
+}
+
+
+#posts {
+}
+#posts .thread {
+	background-color: #49525D;
+	padding: 4px;
+	margin-bottom: 2em;
+	clear: both;
+	-moz-border-radius: 6px;
+}
+#posts .sagethread
+{
+	background-color: #D6E0F0;
+	padding: 4px;
+	margin-bottom: 2em;
+	clear: both;
+	-moz-border-radius: 6px;
+}
+#posts h2 {
+	float: left;
+	background-color: inherit;
+	font-size: 1.2em;
+	color: #EEEEEE;
+	font-weight: bold;
+	margin: 0px 0px .3em 1em;
+	padding: 0px;
+}
+#posts h2 small {
+	font-weight: normal;
+	font-size: .7em;
+}
+#posts .threadnavigation {
+	float: right;
+}
+#posts .threadnavigation a {
+	text-decoration: none;
+	font-weight: bold;
+}
+#posts .replies {
+	clear: both;
+}
+#posts .allreplies, #posts .firstreply, #posts .finalreplies {
+	background-color: #DDDDDD;
+	color: #000080;
+	/*font-family: serif;*/
+	font-size: .8em;
+	margin: 3px;
+	padding: 3px;
+	-moz-border-radius: 4px;
+}
+#posts .allreplies a:link, #posts .firstreply a:link, #posts .finalreplies a:link {
+	color: #49525D;
+}
+#posts .allreplies a:visited, #posts .firstreply a:visited, #posts .finalreplies a:visited {
+	color: #2B3037;
+}
+#posts .allreplies a:hover, #posts .firstreply a:hover, #posts .finalreplies a:hover {
+	color: #8C9FB4;
+}
+#posts .allreplies a:active, #posts .firstreply a:active, #posts .finalreplies a:active {
+	color: #8C9FB4;
+}
+#posts .repliesomitted {
+}
+
+
+#posts .reply {
+	clear: both;
+}
+#posts .deletedreply {
+	clear: both;
+	padding-bottom: 1em;
+}
+#posts h3 {
+	/*font-size: .9em;*/
+	font-size: 1em;
+	color: #000000;
+	font-weight: normal;
+	margin: 0px;
+	padding: 0px;
+}
+#posts .deletedreply h3 {
+	color: #AFAFAF;
+	font-weight: bold;
+}
+#posts h3 .replynum {
+	color: #999999;
+	font-weight: bold;
+	margin-left: 0.3em;
+	margin-right: 0.3em;
+}
+#posts h3 .replynum a {
+	color: #999999;
+	text-decoration: none;
+}
+#posts h3 .replynum a:hover {
+	color:#EEEEEE;
+}
+#posts h3 .postername {
+	color: #2B3037;
+	font-weight: bold;
+	font-size: 1.2em;
+}
+#posts h3 .postertrip {
+	color: #49525D;
+	font-style: italic;
+	font-size: 1.2em;
+}
+#posts .deletebutton {
+	position: absolute;
+	right: 1.5em;
+	font-size: small;
+}
+#posts img {
+	border: 1px solid #49525D;
+	float: left;
+	margin: 0.5em 2em 0.5em 1em;
+}
+#posts .nothumbnail {
+	float: left;
+	display: inline; /* stupid IE bug */
+	background: #eeeeee;
+	border: 2px dashed #cccccc;
+	text-align: center;
+	padding: 1em 0.5em 1em 0.5em;
+	margin: 0.5em 2em 0.5em 2em;
+}
+#posts .replytext > :first-child {
+	margin-top: 0em;
+}
+#posts .replytext > :last-child {
+	margin-bottom: 0em;
+}
+#posts .replytext:after {
+	content: "";
+	display: block;
+	height: 0.1px;
+	clear: both;
+	margin: 0px;
+}
+#posts .replytext {
+	margin: 3px;
+	padding: 3px;
+	background-color: #FFFFFF;
+	border: 1px solid #FFFFFF;
+	-moz-border-radius: 4px;
+}
+#posts .replytext blockquote {
+	margin-left: 0em;
+	color: #697685;
+}
+#posts .replyabbrev {
+	color: #228854;
+	margin-left: 3px;
+	margin-bottom: 0.5em;
+}
+
+
+
+#posts form {
+	background-color: #99A9BA;
+	color: #49525D;
+	/*font-family: serif;*/
+	font-weight: bold;
+	font-size: .8em;
+	margin: 3px;
+	padding: 3px;
+	-moz-border-radius: 4px;
+}
+#posts form a:link {
+	color: #49525D;
+}
+#posts form a:visited {
+	color: #2B3037;
+}
+#posts form a:hover {
+	color: #EEEEEE;
+}
+#posts form a:active {
+	color: #FFFFFF;
+}
+#posts input, #posts textarea {
+	background-color: #EEEEEE;
+	border-top: 1px solid #49525D;
+	border-bottom: 1px solid #B6C2CF;
+	border-left: 1px solid #49525D;
+	border-right: 1px solid #B6C2CF;
+}
+#posts textarea {
+	-moz-border-radius: 4px;
+}
+#posts input[type=submit] {
+	background-color: #000000;
+	color: #FFFFFF;
+	font-weight: bold;
+}
+.postcaptcha {
+	color: #000000;
+}
+
+
+
+#footer {
+        text-align: center;
+        font-size: 0.8em;
+}
+
+
+
+.errorpage h1, .errorpage h2 {
+	text-align: center;
+}
