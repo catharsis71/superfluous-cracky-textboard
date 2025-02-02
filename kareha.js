@@ -2,12 +2,10 @@ function get_cookie(name)
 {
 	with(document.cookie)
 	{
-		var index=indexOf(name+"=");
-		if(index==-1) return '';
-		index=indexOf("=",index)+1;
-		var endstr=indexOf(";",index);
-		if(endstr==-1) endstr=length;
-		return unescape(substring(index,endstr));
+		var regexp=new RegExp("(^|;\\s+)"+name+"=(.*?)(;|$)");
+		var hit=regexp.exec(document.cookie);
+		if(hit&&hit.length>2) return unescape(hit[2]);
+		else return '';
 	}
 };
 
@@ -48,16 +46,29 @@ function get_password(name)
 
 
 
+function show(id)
+{
+	var style=document.getElementById(id).style;
+	if(style.display) style.display="";
+	else style.display="none";
+}
 
-function insert(text,thread) /* hay WTSnacks what's goin on in this function? */
+function insert(text,thread)
 {
 	var textarea=document.getElementById("postform"+thread).comment;
 	if(textarea)
 	{
-		if(textarea.createTextRange && textarea.caretPos)
+		if(textarea.createTextRange && textarea.caretPos) // IE
 		{
 			var caretPos=textarea.caretPos;
 			caretPos.text=caretPos.text.charAt(caretPos.text.length-1)==" "?text+" ":text;
+		}
+		else if(textarea.setSelectionRange) // Firefox
+		{
+			var start=textarea.selectionStart;
+			var end=textarea.selectionEnd;
+			textarea.value=textarea.value.substr(0,start)+text+textarea.value.substr(end);
+			textarea.setSelectionRange(start+text.length,start+text.length);
 		}
 		else
 		{
@@ -77,36 +88,13 @@ function size_field(id,rows) { document.getElementById(id).comment.setAttribute(
 
 
 
-
-var manager;
-
-function set_manager()
-{
-	manager=prompt("Enter management password:");
-
-	var spans=document.getElementsByTagName("span");
-	for(var i=0;i<spans.length;i++)
-	{
-		if(spans[i].className=="manage")
-		{
-			spans[i].style.display="";
-
-			var children=spans[i].childNodes;
-			for(var j=0;j<children.length;j++)
-			{
-				if(children[j].nodeName.toLowerCase()=="a"&&children[j].href.substr(0,11)!="javascript:") children[j].href+="&admin="+manager;
-			}
-		}
-	}
-}
-
 function delete_post(thread,post,file)
 {
 	if(confirm("Are you sure you want to delete reply "+post+"?"))
 	{
 		var fileonly=false;
 		var script=document.forms[0].action;
-		var password=manager?manager:document.forms[0].password.value;
+		var password=document.forms[0].password.value;
 
 		if(file) fileonly=confirm("Leave the reply text and delete the only file?");
 
@@ -171,8 +159,33 @@ function get_preferred_stylesheet()
 	return null;
 }
 
-function set_inputs(id) { with(document.getElementById(id)) {if(!name.value) name.value=get_cookie("name"); if(!link.value) link.value=get_cookie("link"); if(!password.value) password.value=get_password("password"); } }
-function set_delpass(id) { with(document.getElementById(id)) password.value=get_cookie("password"); }
+function set_inputs(id)
+{
+	var el=document.getElementById(id);
+
+	if(!el||!el.link) return;
+
+	if(!el.name.value) el.name.value=get_cookie("name");
+	if(!el.link.value) el.link.value=get_cookie("link");
+	if(!el.password.value) el.password.value=get_password("password");
+	if(el.markup&&!el.comment.value) el.markup.value=get_cookie("markup");
+	select_markup(el.markup);
+}
+
+function set_delpass(id)
+{
+	with(document.getElementById(id)) password.value=get_cookie("password");
+}
+
+function select_markup(sel)
+{
+	if(!window.markup_descriptions) return;
+
+	var el=sel;
+	while(el=el.nextSibling) if(el.nodeName.toLowerCase()=="small") break;
+
+	if(el) el.innerHTML=markup_descriptions[sel.value];
+}
 
 window.onunload=function(e)
 {
@@ -185,7 +198,9 @@ window.onunload=function(e)
 
 window.onload=function(e)
 {
-	if(match=/#i(.+)/.exec(document.location.toString())) insert(unescape(match[1]),"");
+	if(match=/#i(.+)/.exec(document.location.toString()))
+	if(!document.getElementById("postform").comment.value)
+	insert(unescape(match[1]),"");
 }
 
 if(style_cookie)

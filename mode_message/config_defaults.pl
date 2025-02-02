@@ -7,7 +7,11 @@ BEGIN {
 	# System config
 	die S_NOADMIN unless(defined &ADMIN_PASS);
 	die S_NOSECRET unless(defined &SECRET);
-	eval "use constant ADMIN_TRIPS => ()" unless(defined &ADMIN_TRIPS);
+	unless(defined &CAPPED_TRIPS)
+	{
+		if(defined &ADMIN_TRIPS) { eval "use constant CAPPED_TRIPS => map {(\$_=>' (Admin)')} ADMIN_TRIPS" }
+		else { eval "use constant CAPPED_TRIPS => ()" }
+	}
 
 	# Page look
 	eval "use constant TITLE => 'Kareha message board'" unless(defined &TITLE);
@@ -24,14 +28,17 @@ BEGIN {
 	# Limitations
 	eval "use constant ALLOW_TEXT_THREADS => 1" unless(defined &ALLOW_TEXT_THREADS);
 	eval "use constant ALLOW_TEXT_REPLIES => 1" unless(defined &ALLOW_TEXT_REPLIES);
-	eval "use constant MAX_RES => 1000" unless(defined &MAX_RES);
+	eval "use constant AUTOCLOSE_POSTS => 1000" unless(defined &AUTOCLOSE_POSTS);
+	eval "use constant AUTOCLOSE_DAYS => 0" unless(defined &AUTOCLOSE_DAYS);
+	eval "use constant AUTOCLOSE_SIZE => 0" unless(defined &AUTOCLOSE_SIZE);
+	eval "use constant MAX_RES => 1000000000" unless(defined &MAX_RES);
 	eval "use constant MAX_THREADS => 0" unless(defined &MAX_THREADS);
 	eval "use constant MAX_POSTS => 0" unless(defined &MAX_POSTS);
 	eval "use constant MAX_MEGABYTES => 0" unless(defined &MAX_MEGABYTES);
 	eval "use constant MAX_FIELD_LENGTH => 100" unless(defined &MAX_FIELD_LENGTH);
 	eval "use constant MAX_COMMENT_LENGTH => 8192" unless(defined &MAX_COMMENT_LENGTH);
-	eval "use constant MAX_LINES => 100" unless(defined &MAX_LINES);
 	eval "use constant MAX_LINES_SHOWN => 15" unless(defined &MAX_LINES_SHOWN);
+	eval "use constant ALLOW_ADMIN_EDIT => 0" unless(defined &ALLOW_ADMIN_EDIT);
 
 	# Image posts
 	eval "use constant ALLOW_IMAGE_THREADS => 0" unless(defined &ALLOW_IMAGE_THREADS);
@@ -65,28 +72,30 @@ BEGIN {
 	eval "use constant TRIM_METHOD => 1" unless(defined &TRIM_METHOD);
 	eval "use constant REQUIRE_THREAD_TITLE => 1" unless(defined &REQUIRE_THREAD_TITLE);
 	eval "use constant DATE_STYLE => '2ch'" unless(defined &DATE_STYLE);
-	eval "use constant DISPLAY_ID => 'thread board'" unless(defined &DISPLAY_ID);
+	eval "use constant DISPLAY_ID => 'thread board sage'" unless(defined &DISPLAY_ID);
 	eval "use constant EMAIL_ID => 'Heaven'" unless(defined &EMAIL_ID);
 	eval "use constant SILLY_ANONYMOUS => ''" unless(defined &SILLY_ANONYMOUS);
 	eval "use constant FORCED_ANON => 0" unless(defined &FORCED_ANON);
 	eval "use constant TRIPKEY => '!'" unless(defined &TRIPKEY);
 	eval "use constant ALTERNATE_REDIRECT => 0" unless(defined &ALTERNATE_REDIRECT);
-	eval "use constant ENABLE_WAKABAMARK => 1" unless(defined &ENABLE_WAKABAMARK);
 	eval "use constant APPROX_LINE_LENGTH => 150" unless(defined &APPROX_LINE_LENGTH);
 	eval "use constant COOKIE_PATH => 'root'" unless(defined &COOKIE_PATH);
 	eval "use constant STYLE_COOKIE => 'karehastyle'" unless(defined &STYLE_COOKIE);
 	eval "use constant ENABLE_DELETION => 1" unless(defined &ENABLE_DELETION);
-	eval "use constant VISIBLE_ADMINS => 0" unless(defined &VISIBLE_ADMINS);
 	eval "use constant PAGE_GENERATION => 'single'" unless(defined &PAGE_GENERATION);
 	eval "use constant DELETE_FIRST => 'single'" unless(defined &DELETE_FIRST);
+	eval "use constant DEFAULT_MARKUP => 'waka'" unless(defined &DEFAULT_MARKUP);
 	eval "use constant FUDGE_BLOCKQUOTES => 0" unless(defined &FUDGE_BLOCKQUOTES);
 	eval "use constant USE_XHTML => 1" unless(defined &USE_XHTML);
+	eval "use constant KEEP_MAINPAGE_NEWLINES => 0" unless(defined &KEEP_MAINPAGE_NEWLINES);
 
 	# Internal paths and files - might as well leave this alone.
 	eval "use constant RES_DIR => 'res/'" unless(defined &RES_DIR);
 	eval "use constant CSS_DIR => 'css/'" unless(defined &CSS_DIR);
 	eval "use constant IMG_DIR => 'src/'" unless(defined &IMG_DIR);
 	eval "use constant THUMB_DIR => 'thumb/'" unless(defined &THUMB_DIR);
+	eval "use constant INCLUDE_DIR => 'include/'" unless(defined &INCLUDE_DIR);
+	eval "use constant LOG_FILE => 'log.txt'" unless(defined &LOG_FILE);
 	eval "use constant PAGE_EXT => '.html'" unless(defined &PAGE_EXT);
 	eval "use constant HTML_SELF => 'index.html'" unless(defined &HTML_SELF);
 	eval "use constant HTML_BACKLOG => 'subback.html'" unless(defined &HTML_BACKLOG);
@@ -96,7 +105,15 @@ BEGIN {
 
 	eval "use constant FILETYPES => ()" unless(defined &FILETYPES);
 
-	eval "use constant KAREHA_VERSION => '2.0.4'" unless(defined &KAREHA_VERSION);
+	eval q{use constant ALLOWED_HTML => (
+		'a'=>{args=>{'href'=>'url'}},
+		'b'=>{},'i'=>{},'u'=>{},'sub'=>{},'sup'=>{},
+		'em'=>{},'strong'=>{},
+		'ul'=>{},'ol'=>{},'li'=>{},'dl'=>{},'dt'=>{},'dd'=>{},
+		'p'=>{},'br'=>{empty=>1},'blockquote'=>{},
+	)} unless(defined &ALLOWED_HTML);
+
+	eval "use constant KAREHA_VERSION => '3.0.8'" unless(defined &KAREHA_VERSION);
 }
 
 1;

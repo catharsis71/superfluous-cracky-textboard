@@ -11,8 +11,9 @@ BEGIN { require "config.pl"; }
 BEGIN { require "config_defaults.pl"; }
 BEGIN { require "wakautils.pl"; }
 
-
 return 1 if(caller);
+
+
 
 my $font_height=8;
 my %font=(
@@ -56,7 +57,7 @@ my @background=(0xff,0xff,0xff);
 
 if(!$key)
 {
-	$key=encode_base64(rc4(null_string(6),"k".$ENV{REMOTE_ADDR}.int(time()/60).SECRET),"");
+	$key=hide_data($ENV{REMOTE_ADDR}.int(time()/60),6,"key",SECRET,1);
 	my $cookie=$query->cookie(-name=>"captchakey",
 	                          -value=>$key,
 	                          -expires=>'+14d');
@@ -111,7 +112,7 @@ sub make_word($)
 		X => ["e","i","o","aw","ow","oy"]
 	);
 
-	srand unpack "N",rc4(null_string(4),"c".$key.SECRET);
+	srand unpack "N",hide_data($key,4,"captcha",SECRET);
 
 	return cfg_expand("%W%",%grammar);
 }

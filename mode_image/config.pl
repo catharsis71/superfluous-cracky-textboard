@@ -8,7 +8,7 @@
 # System config
 #use constant ADMIN_PASS => 'CHANGEME';			# Admin password. For fucks's sake, change this.
 #use constant SECRET => 'CHANGEME';				# Cryptographic secret. CHANGE THIS to something totally random, and long.
-#use constant ADMIN_TRIPS => ('!!example1','!!example2');	# Admin tripcodes, for startng threads when locked down, and similar.
+#use constant CAPPED_TRIPS => ('!!example1'=>' capcode','!!example2'=>' <em>cap</em>');	# Admin tripcode hash, for startng threads when locked down, and similar. Format is '!trip'=>'capcode', where 'capcode' is what is shown instead of the trip. This can contain HTML, but keep it valid XHTML!
 
 # Page look
 #use constant TITLE => 'Kareha image board';	# Name of this image board
@@ -25,14 +25,18 @@
 # Limitations
 #use constant ALLOW_TEXT_THREADS => 1;			# Allow users to create text threads
 #use constant ALLOW_TEXT_REPLIES => 1;			# Allow users to make text replies
+#use constant AUTOCLOSE_POSTS => 0;				# Maximum number of posts before a thread closes. 0 to disable.
+#use constant AUTOCLOSE_DAYS => 0;				# Maximum number of days with no activity before a thread closes. 0 to disable.
+#use constant AUTOCLOSE_SIZE => 0;				# Maximum size of the thread HTML file in kilobytes before a thread closes. 0 to disable.
 #use constant MAX_RES => 20;					# Maximum topic bumps
 #use constant MAX_THREADS => 0;					# Maximum number of threads - set to 0 to disable
 #use constant MAX_POSTS => 500;					# Maximum number of posts - set to 0 to disable
 #use constant MAX_MEGABYTES => 0;				# Maximum size to use for all images in megabytes - set to 0 to disable
 #use constant MAX_FIELD_LENGTH => 100;			# Maximum number of characters in subject, name, and email
 #use constant MAX_COMMENT_LENGTH => 8192;		# Maximum number of characters in a comment
-#use constant MAX_LINES => 100;					# Max lines per post (0 = no limit)
 #use constant MAX_LINES_SHOWN => 15;			# Max lines of a comment shown on the main page (0 = no limit)
+#use constant ALLOW_ADMIN_EDIT => 0;			# Allow editing of include files and spam.txt from admin.pl.
+                                    			# Warning! This is a security risk, since include templates can run code! Only enable if you completely trust your moderators!
 
 # Image posts
 #use constant ALLOW_IMAGE_THREADS => 1;			# Allow users to create image threads
@@ -66,28 +70,34 @@
 #use constant TRIM_METHOD => 0;					# Which threads to trim (0: oldest - like futaba 1: least active - furthest back)
 #use constant REQUIRE_THREAD_TITLE => 0;		# Require a title for threads (0: no, 1: yes)
 #use constant DATE_STYLE => 'futaba';			# Date style ('2ch', 'futaba', 'localtime, 'http')
-#use constant DISPLAY_ID => '';					# How to display user IDs (0 or '': don't display, any combination of 'day', 'thread', 'board': make IDs change for each day, thread or board, 'static': static IDs)
+#use constant DISPLAY_ID => '';					# How to display user IDs (0 or '': don't display,
+												#  'day', 'thread', 'board' in any combination: make IDs change for each day, thread or board,
+												#  'mask': display masked IP address (similar IPs look similar, but are still encrypted)
+												#  'sage': don't display ID when user sages, 'link': don't display ID when the user fills out the link field,
+												#  'ip': display user's IP, 'host': display user's host)
 #use constant EMAIL_ID => 'Heaven';				# Replace the ID with this string when the user uses an email. Set to '' to disable.
 #use constant SILLY_ANONYMOUS => '';			# Make up silly names for anonymous people (same syntax as DISPLAY_ID)
 #use constant FORCED_ANON => 0;					# Force anonymous posting (0: no, 1: yes)
 #use constant TRIPKEY => '!';					# This character is displayed before tripcodes
 #use constant ALTERNATE_REDIRECT => 0;			# Use alternate redirect method. (Javascript/meta-refresh instead of HTTP forwards.)
-#use constant ENABLE_WAKABAMARK => 1;			# Enable WakabaMark formatting. (0: no, 1: yes)
 #use constant APPROX_LINE_LENGTH => 150;		# Approximate line length used by reply abbreviation code to guess at the length of a reply.
 #use constant COOKIE_PATH => 'root';			# Path argument for cookies ('root': cookies apply to all boards on the site, 'current': cookies apply only to this board, 'parent': cookies apply to all boards in the parent directory) - does NOT apply to the style cookie!
 #use constant STYLE_COOKIE => 'wakabastyle';	# Cookie name for the style selector.
 #use constant ENABLE_DELETION => 1;				# Enable user deletion of posts. (0: no, 1: yes)
-#use constant VISIBLE_ADMINS => 0;				# Highlight the name for admin posts. (0: no, 1: yes)
 #use constant PAGE_GENERATION => 'paged';		# Page generation method ('single': just one page, 'paged': split into several pages like futaba, 'monthly': separate pages for each month)
 #use constant DELETE_FIRST => 'remove';			# What to do when the first post is deleted ('keep': keep the thread, 'single': delete the thread if there is only one post, 'remove': delete the whole thread)
+#use constant DEFAULT_MARKUP => 'waka';			# Default markup type ('none', 'waka', 'html', 'aa)
 #use constant FUDGE_BLOCKQUOTES => 1;			# Modify formatting for old stylesheets
 #use constant USE_XHTML => 1;					# Send pages as application/xhtml+xml to browsers that support this (0:no, 1:yes)
+#use constant KEEP_MAINPAGE_NEWLINES => 0;		# Don't strip whitespace from main page (needed for Google ads to work, 0:no, 1:yes)
 
 # Internal paths and files - might as well leave this alone.
 #use constant RES_DIR => 'res/';				# Reply cache directory (needs to be writeable by the script)
 #use constant CSS_DIR => 'css/';				# CSS file directory
 #use constant IMG_DIR => 'src/';				# Image directory (needs to be writeable by the script)
 #use constant THUMB_DIR => 'thumb/';			# Thumbnail directory (needs to be writeable by the script)
+#use constant INCLUDE_DIR => 'include/';		# Include file directory
+#use constant LOG_FILE => 'log.txt';			# Log file (stores delete passwords and IP addresses in encrypted form)
 #use constant PAGE_EXT => '.html';				# Extension used for board pages after first
 #use constant HTML_SELF => 'index.html';		# Name of main html file
 #use constant HTML_BACKLOG => '';				# Name of backlog html file

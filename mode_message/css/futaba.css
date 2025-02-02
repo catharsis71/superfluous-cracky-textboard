@@ -2,6 +2,7 @@
 html {
 	padding: 0px;
 	margin: 0px;
+	background: #FFFFEE;
 }
 body {
 	padding: 8px;
@@ -31,99 +32,105 @@ ol p:first-child, ul p:first-child {
 ol p:last-child, ul p:last-child {
 	margin-bottom: 0;
 }
-
-
-
-#topbar {
-	margin: 0.3em;
-	margin-bottom: 1em;
-	text-align: right;
-	font-size: small;
+input, textarea {
+	border: 1px solid #800000;
 }
-#navbar, #managerbar, #stylebar {
-	display: inline;
+textarea {
+	-moz-border-radius: 4px;
+}
+.aa {
+	font-family: Mona,'MS PGothic' !important; 
+}
+
+
+
+#navigation {
+	font-size: small;
+	margin-bottom: 1em;
+	float: left;
 	white-space: nowrap;
-	line-height: 2em;
 	background: #F0E0D6;
 	padding: 3px 0px 3px 0px;
-	margin-left: 1em;
+	margin: 0 0 1em 1em;
 	border: 1px solid #800000;
 	-moz-border-radius: 4px;
 }
-#navbar strong, #managerbar strong, #stylebar strong {
+#navigation strong {
 	background: #EEAA88;
 	color: #800000;
 	font-weight: normal;
 	padding: 3px;
 	-moz-border-radius: 3px 0px 0px 3px;
 }
-#navbar a, #managerbar a, #stylebar a {
+#navigation a {
 	padding: 3px;
 }
 
 
 
-#threads {
+.outerbox, .backlogpage #threads {
 	background: #EEAA88;
 	color: #800000;
 	padding: 4px;
-	margin-bottom: 2em;
-	-moz-border-radius: 6px;
 	clear: both;
 }
-#threads h1 {
+#titlebox {
+	-moz-border-radius: 6px 6px 0 0;
+}
+h1 {
+	background: #EEAA88;
 	font-size: 2em;
 	font-weight: normal;
 	text-align: center;
 	padding: 0px;
 	margin: 0px;
 }
-#threadlist {
+#titlebox {
+	position: relative;
+}
+#titlebox .threadnavigation {
+	position: absolute;
+	right: 0.3em;
+	top: 0.9em;
+}
+#rules, #threadbox .innerbox {
 	background: #F0E0D6;
-	font-family: serif;
 	margin: 3px;
 	padding: 6px;
-	margin-bottom: 7px;
 	-moz-border-radius: 4px;
 }
-#threadlist .threadlink {
+#stylebox {
+	padding: 1px 9px;
+	margin: -1px 0;
+}
+#threadbox {
+	margin-bottom: 2em;
+	-moz-border-radius: 0 0 6px 6px;
+}
+#threadbox .threadlink {
 	padding-right: 0.5em;
 }
-#threadlist strong {
+#threadlinks {
 	text-align: right;
 	font-weight: bold;
 }
-#oldthreadlist {
-	background: #F0E0D6;
-	font-family: serif;
-	margin: 3px;
-	padding: 6px;
-	margin-bottom: 7px;
+#createbox {
 	-moz-border-radius: 4px;
 }
-#oldthreadlist .threadlink {
-	display: block;
-}
-#oldthreadlist .manage {
-	font-size: small;
-	margin-left: 1em;
-}
-#threads form {
+#createbox form {
 	background: #F0E0D6;
-	font-family: serif;
-        color: #800000;
-        font-weight: bold;
+	color: #800000;
+	font-weight: bold;
 	margin: 3px;
 	padding: 3px;
 	-moz-border-radius: 4px;
 }
-#threads input, #threads textarea {
-	border: 1px solid #800000;
-}
-#threads textarea {
-	-moz-border-radius: 4px;
-}
-#threads input[type=submit] {
+#createbox h2 {
+	font-size: 1.2em;
+	font-weight: bold;
+	margin: 0 0 0 2em;
+	padding: 0px;
+	text-decoration: none;
 }
 .threadcaptcha {
 	color: #800000;
@@ -154,6 +161,13 @@ ol p:last-child, ul p:last-child {
 	font-weight: bold;
 	margin: 0px 0px 0px 1em;
 	padding: 0px;
+}
+#posts h2 a {
+	color: #CC1105;
+	text-decoration: none;
+}
+#posts h2 a:hover {
+	text-decoration: underline;
 }
 #posts h2 small {
 	font-size: 1em;
@@ -221,7 +235,7 @@ ol p:last-child, ul p:last-child {
 	position: absolute;
 	right: 1em;
 }
-#posts img {
+#posts img.thumb, #posts a img {
 	border: 1px solid #800000;
 	float: left;
 	margin: 0.5em 2em 0.5em 3em;
@@ -261,15 +275,10 @@ ol p:last-child, ul p:last-child {
 	margin: 3px;
 	padding: 3px;
 	-moz-border-radius: 4px;
-	font-weight:800;
+	font-weight: bold;
 }
-#posts input, #posts textarea {
-	border: 1px solid #800000;
-}
-#posts textarea {
-	-moz-border-radius: 4px;
-}
-#posts input[type=submit] {
+#posts form a {
+	font-weight: normal;
 }
 .postcaptcha {
 	color: #800000;
@@ -281,6 +290,28 @@ ol p:last-child, ul p:last-child {
 {
         text-align: center;
         font-size: 0.8em;
+}
+
+
+
+#oldthreadlist {
+	width: 100%;
+	background: #F0E0D6;
+	padding: 6px;
+	-moz-border-radius: 4px;
+	margin: 0 auto;
+}
+#oldthreadlist th {
+	text-align: left;
+}
+#oldthreadlist .line0 {
+	background: #F0E0D6;
+}
+#oldthreadlist .line1 {
+	background: #E0D1C7;
+}
+#oldthreadlist a {
+	display: block;
 }
 
 

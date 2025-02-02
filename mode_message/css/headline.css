@@ -31,89 +31,83 @@ ol p:first-child, ul p:first-child {
 ol p:last-child, ul p:last-child {
 	margin-bottom: 0;
 }
+.aa {
+	font-family: Mona,'MS PGothic' !important; 
+}
 
-#topbar {
-	margin: 0.3em;
-	margin-bottom: 1em;
-	text-align: right;
-	font-size: small;
+
+input, textarea {
+	border: 1px solid #000000;
 }
-#navbar, #managerbar, #stylebar {
-	display: inline;
-	white-space: nowrap;
-	line-height: 2em;
-	background: #EEEEEE;
-	border-bottom: 2px solid #FF7700;
-	font-family: sans-serif;
-	padding: 4px;
-	margin-left: 1em;
+input[type=submit] {
 }
-#navbar strong, #managerbar strong, #stylebar strong {
-	font-weight: bold;
-}
-#navbar a, #managerbar a, #stylebar a {
-	padding: 3px;
+input[type="file"] > input[type="text"] {
+	border: 1px solid #000000;
 }
 
 
 
-#threads {
+.outerbox, .backlogpage #threads {
 	background: #EEEEEE;
 	color: #000000;
-	border-bottom: 2px solid #BBBBBB;
-	margin-bottom: 2em;
-	clear: both;
-}
-#threads h1 {
-	border-bottom: 2px solid #FF7700;
-	font-size: 2em;
 	font-family: sans-serif;
+	clear: both;
+	margin-bottom: 0;
+	padding-bottom: 0.5em;
+	border-bottom: 2px solid #BBBBBB;
+}
+h1 {
+	font-size: 2em;
 	font-weight: bold;
 	text-align: center;
+	border-bottom: 2px solid #FF7700;
 	padding: 4px 4px 0px 4px;
-	margin: 0px;
 }
-#threadlist {
-	font-family: sans-serif;
-	border-bottom: 2px solid #BBBBBB;
-	padding: 1em 0.5em 1em 0.5em;
-	margin-bottom: 7px;
+#titlebox {
+	position: relative;
 }
-#threadlist .threadlink {
+#titlebox .threadnavigation {
+	position: absolute;
+	right: 0.3em;
+	top: 0.7em;
+}
+#rules {
+	padding: 0em 0.5em;
+}
+#stylebox {
+	padding: 0.5em;
+}
+#threadbox {
+	margin-bottom: 2em;
+}
+#threadbox .innerbox {
+	padding: 1em 0.5em 0.2em 0.5em;
+}
+#threadbox .threadlink, #threadlinks a {
 	padding-right: 0.5em;
 }
-#threadlist strong {
+#threadlinks {
 	text-align: right;
 	font-weight: bold;
 }
-#oldthreadlist {
+
+
+
+
+#createbox h2 {
+	border-bottom: 2px solid #FF7700;
+	font-size: 1.2em;
 	font-family: sans-serif;
-	padding: 9px;
-	margin-bottom: 7px;
+	font-weight: bold;
+	margin: 0 0 0.7em 0;
+	padding: 0 0 0 3em;
 }
-#oldthreadlist .threadlink {
-	display: block;
-}
-#oldthreadlist .manage {
-	font-size: small;
-	margin-left: 1em;
-}
-#threads form {
-	font-family: sans-serif;
-	margin: 3px;
-	padding: 3px;
-}
-#threads input, #threads textarea {
-	border: 1px solid #000000;
-}
-#threads input[type=submit] {
-}
-#threads input[type="file"] > input[type="text"] {
-	border: 1px solid #000000;
-}
+
 .threadcaptcha {
 	color: #000000;
 }
+
+
 
 
 
@@ -133,13 +127,19 @@ ol p:last-child, ul p:last-child {
 #posts h2 {
 	float: left;
 	background: #EEEEEE;
-	color: #000000;
 	border-bottom: 2px solid #FF7700;
 	font-size: 1.2em;
 	font-family: sans-serif;
 	font-weight: bold;
 	margin: 0px 0px 0.7em 0px;
 	padding: 0px 0.2em 0px 0px;
+}
+#posts h2 a {
+	color: #000000;
+	text-decoration: none;
+}
+#posts h2 a:hover {
+	color:#FFAA44;
 }
 #posts h2 small {
 	font-size: 1em;
@@ -218,7 +218,7 @@ ol p:last-child, ul p:last-child {
 #posts .deletebutton a:hover {
 	color:#FFAA44;
 }
-#posts img {
+#posts img.thumb, #posts a img {
 	float: left;
 	border: 1px solid #000000;
 	margin: 0.5em 2em 0.5em 2em;
@@ -255,6 +255,14 @@ ol p:last-child, ul p:last-child {
 	margin-left: 3em;
 	margin-bottom: 0.5em;
 }
+h4 {
+	float: right;
+	font-weight: normal;
+	font-style: italic;
+	font-size: 1.2em;
+	margin: 0;
+	padding: 0;
+}
 
 
 
@@ -267,11 +275,7 @@ ol p:last-child, ul p:last-child {
 	margin: 3px;
 	padding: 3px;
 }
-#posts input, #posts textarea {
-	border: 1px solid #000000;
-}
-#posts input[type=submit] {
-}
+
 .postcaptcha {
 	color: #000000;
 }
@@ -285,8 +289,54 @@ ol p:last-child, ul p:last-child {
 
 
 
+#navigation {
+	float:left;
+	white-space: nowrap;
+	background: #EEEEEE;
+	border-bottom: 2px solid #FF7700;
+	font-size: small;
+	font-family: sans-serif;
+	padding: 4px;
+	margin: 0.3em 0.3em 1em 1em;
+}
+#navigations trong {
+	font-weight: bold;
+}
+#navigation a {
+	padding: 3px;
+}
+
+
+
+#oldthreadlist {
+	width: 100%;
+	font-family: sans-serif;
+	padding: 0 1em;
+	margin-bottom: 7px;
+	margin: 0 auto;
+}
+#oldthreadlist th {
+	text-align: left;
+	border-bottom: 2px solid #FF7700;
+}
+#oldthreadlist .line0 {
+	background: #FFFFFF;
+}
+#oldthreadlist .line1 {
+	background: #DDDDDD;
+}
+#oldthreadlist a {
+	display: block;
+}
+
+
+
+
 .errorpage h1, .errorpage h2 {
+	clear: both;
 	text-align: center;
+	margin: 1em 0;
+	padding: 0;
 }
 
 .errorpage h1 {

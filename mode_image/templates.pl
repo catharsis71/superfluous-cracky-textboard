@@ -9,29 +9,24 @@ BEGIN { require 'wakautils.pl' }
 #
 
 use constant S_HOME => 'Home';										# Forwards to home page
-use constant S_ADMIN => 'Manage';									# Forwards to Management Panel
 use constant S_RETURN => 'Return';									# Returns to image board
-use constant S_POSTING => 'Posting mode: Reply';					# Prints message in red bar atop the reply screen
+use constant S_POSTING => 'Reply mode';								# Prints message in red bar atop the reply screen
 
 use constant S_NAME => 'Name';										# Describes name field
-use constant S_EMAIL => 'E-mail';									# Describes e-mail field
+use constant S_EMAIL => 'Link';										# Describes e-mail field
 use constant S_SUBJECT => 'Subject';								# Describes subject field
 use constant S_SUBMIT => 'Submit';									# Describes submit button
 use constant S_COMMENT => 'Comment';								# Describes comment field
 use constant S_UPLOADFILE => 'File';								# Describes file field
-use constant S_NOFILE => 'No File';									# Describes file/no file checkbox
 use constant S_CAPTCHA => 'Verification';							# Describes captcha field
-use constant S_PARENT => 'Parent';									# Describes parent field on admin post page
 use constant S_DELPASS => 'Password';								# Describes password field
-use constant S_DELEXPL => '(Password used for file deletion)';		# Prints explanation for password box (to the right)
+use constant S_DELEXPL => '(for post and file deletion)';			# Prints explanation for password box (to the right)
 
-use constant S_CAPPED => ' (Admin)';
 use constant S_THUMB => 'Thumbnail displayed, click image for full size.';	# Prints instructions for viewing real source
-use constant S_HIDDEN => 'Image reply hidden, click name for full image.';	# Prints instructions for viewing hidden image reply
+use constant S_HIDDEN => 'Thumbnail hidden, click filename for the full image.';	# Prints instructions for viewing hidden image reply
 use constant S_NOTHUMB => 'No<br />thumbnail';								# Printed when there's no thumbnail
 use constant S_PICNAME => 'File: ';											# Prints text before upload name/link
 use constant S_REPLY => 'Reply';											# Prints text for reply link
-use constant S_OLD => 'Marked for deletion (old).';							# Prints text to be displayed before post is marked for deletion, see: retention
 use constant S_ABBR => '%d posts omitted. Click Reply to view.';			# Prints text to be shown when replies are hidden
 use constant S_ABBRIMG => '%d posts and %d images omitted. Click Reply to view.';						# Prints text to be shown when replies and images are hidden
 use constant S_ABBRTEXT => 'Comment too long. Click <a href="%s">here</a> to view the full text.';
@@ -55,24 +50,24 @@ use constant S_FRONT => 'Front page';								# Title of the front page in page l
 
 use constant S_BADCAPTCHA => 'Wrong verification code entered.';			# Error message when the captcha is wrong
 use constant S_UNJUST => 'Unjust POST.';									# Error message on an unjust POST - prevents floodbots or ways not using POST method?
-use constant S_NOTEXT => 'No text entered.';								# Error message for no text entered in to title/comment
+use constant S_NOTEXT => 'No comment entered.';								# Error message for no text entered in to title/comment
 use constant S_NOTITLE => 'No title entered.';								# Error message for no title entered
 use constant S_NOTALLOWED => 'Posting not allowed for non-admins.';			# Error message when the posting type is forbidden for non-admins
-use constant S_TOOLONG => 'Text field too long.';							# Error message for too many characters in a given field
-use constant S_TOOMANYLINES => 'Too many lines in post.';					# Error message for too many characters in a given field
+use constant S_TOOLONG => 'Too many characters in text field.';				# Error message for too many characters in a given field
 use constant S_UNUSUAL => 'Abnormal reply.';								# Error message for abnormal reply? (this is a mystery!)
 use constant S_SPAM => 'Spammers are not welcome here!';					# Error message when detecting spam
 use constant S_THREADCOLL => 'Somebody else tried to post a thread at the same time. Please try again.';		# If two people create threads during the same second
-use constant S_NOTHREADERR => 'Thread specified does not exist.';			# Error message when a non-existant thread is accessed
-use constant S_BADDELPASS => 'Password incorrect.';							# Error message for wrong password (when user tries to delete file)
-use constant S_NOTWRITE => 'Cannot write to directory.';					# Error message when the script cannot write to the directory, the chmod (777) is wrong
-use constant S_NOTASK => 'Script error; no task speficied.';				# Error message when calling the script incorrectly
-use constant S_NOLOG => 'Couldn\'t write to log.txt.';						# Error message when log.txt is not writeable or similar
+use constant S_NOTHREADERR => 'Thread does not exist.';						# Error message when a non-existant thread is accessed
+use constant S_BADDELPASS => 'Incorrect password for deletion.';			# Error message for wrong password (when user tries to delete file)
+use constant S_NOTWRITE => 'Could not write to directory.';					# Error message when the script cannot write to the directory, the chmod (777) is wrong
+use constant S_NOTASK => 'Script error; no task specified.';				# Error message when calling the script incorrectly
+use constant S_NOLOG => 'Could not write to log.txt.';						# Error message when log.txt is not writeable or similar
 use constant S_TOOBIG => 'The file you tried to upload is too large.';		# Error message when the image file is larger than MAX_KB
 use constant S_EMPTY => 'The file you tried to upload is empty.';	# Error message when the image file is 0 bytes
 use constant S_BADFORMAT => 'File format not allowed.';			# Returns error when the file is not in a supported format.
 use constant S_DUPE => 'This file has already been posted <a href="%s">here</a>.';	# Error message when an md5 checksum already exists.
 use constant S_DUPENAME => 'A file with the same name already exists.';	# Error message when an filename already exists.
+use constant S_THREADCLOSED => 'This thread is closed.';					# Error message when posting in a legen^H^H^H^H^H closed thread
 
 
 
@@ -114,14 +109,14 @@ form { margin-bottom: 0px }
 <if $thread><body class="replypage"></if>
 <if !$thread><body class="mainpage"></if>
 
-}.include("include/header.html").q{
+}.include(INCLUDE_DIR."header.html").q{
 
 <div class="adminbar">
 <loop $stylesheets>
 	[<a href="javascript:set_stylesheet('<var $title>')"><var $title></a>]
 </loop>
 -
-[<a href="<var expand_filename(HOME)>" target="_top"><const S_HOME></a>]
+[<a href="<var expand_filename("..")>" target="_top"><const S_HOME></a>]
 </div>
 
 <div class="logo">
@@ -132,7 +127,7 @@ form { margin-bottom: 0px }
 </div><hr />
 };
 
-use constant NORMAL_FOOT_INCLUDE => include("include/footer.html").q{
+use constant NORMAL_FOOT_INCLUDE => include(INCLUDE_DIR."footer.html").q{
 
 </body></html>
 };
@@ -166,7 +161,7 @@ use constant MAIN_PAGE_TEMPLATE => compile_template(NORMAL_HEAD_INCLUDE.q{
 
 	<tr><td class="postblock"><const S_DELPASS></td><td><input type="password" name="password" size="8" /> <const S_DELEXPL></td></tr>
 	<tr><td colspan="2">
-	<div class="rules">}.include("include/rules.html").q{</div></td></tr>
+	<div class="rules">}.include(INCLUDE_DIR."rules.html").q{</div></td></tr>
 	</tbody></table></form></div>
 	<script type="text/javascript">set_inputs("postform")</script>
 </if>
@@ -176,10 +171,10 @@ use constant MAIN_PAGE_TEMPLATE => compile_template(NORMAL_HEAD_INCLUDE.q{
 
 <loop $threads>
 	<loop $posts>
-		<var $reply>
+		<var $text>
 
-		<if $abbrev><div class="abbrev"><var sprintf(S_ABBRTEXT,"$self/$thread/$postnum","$self/$thread/")></div></if>
-		<if $omit and $first>
+		<if $abbreviated><div class="abbrev"><var sprintf(S_ABBRTEXT,"$self/$thread/$num","$self/$thread/")></div></if>
+		<if $omit and $num==1>
 			<span class="omittedposts">
 			<if $omitimages><var sprintf S_ABBRIMG,$omit,$omitimages></if>
 			<if !$omitimages><var sprintf S_ABBR,$omit></if>
@@ -216,7 +211,7 @@ use constant MAIN_PAGE_TEMPLATE => compile_template(NORMAL_HEAD_INCLUDE.q{
 
 </td></tr></tbody></table><br clear="all" />
 
-}.NORMAL_FOOT_INCLUDE);
+}.NORMAL_FOOT_INCLUDE,KEEP_MAINPAGE_NEWLINES);
 
 
 
@@ -241,9 +236,7 @@ use constant THREAD_HEAD_TEMPLATE => compile_template(NORMAL_HEAD_INCLUDE.q{
 	<tr><td class="postblock"><const S_COMMENT></td><td><textarea name="comment" cols="48" rows="4"></textarea></td></tr>
 
 	<if ALLOW_IMAGE_REPLIES>
-		<tr><td class="postblock"><const S_UPLOADFILE></td><td><input type="file" name="file" size="35" />
-		<if ALLOW_TEXT_REPLIES or ALLOW_IMAGE_REPLIES>[<label><input type="checkbox" name="nofile" value="on" /><const S_NOFILE> ]</label></if>
-		</td></tr>
+		<tr><td class="postblock"><const S_UPLOADFILE></td><td><input type="file" name="file" size="35" /></td></tr>
 	</if>
 
 	<if ENABLE_CAPTCHA>
@@ -254,7 +247,7 @@ use constant THREAD_HEAD_TEMPLATE => compile_template(NORMAL_HEAD_INCLUDE.q{
 
 	<tr><td class="postblock"><const S_DELPASS></td><td><input type="password" name="password" size="8" /> <const S_DELEXPL></td></tr>
 	<tr><td colspan="2">
-	<div class="rules">}.include("include/rules.html").q{</div></td></tr>
+	<div class="rules">}.include(INCLUDE_DIR."rules.html").q{</div></td></tr>
 	</tbody></table></form></div>
 	<script type="text/javascript">set_inputs("postform")</script>
 </if>
@@ -285,26 +278,24 @@ use constant THREAD_FOOT_TEMPLATE => compile_template(q{
 use constant REPLY_TEMPLATE => compile_template( q{
 <if $num==1>
 	<if $image>
-		<span class="filesize"><const S_PICNAME><a target="_blank" href="<var expand_filename($image)>"><var get_filename($image)></a>
+		<span class="filesize"><const S_PICNAME><a target="_blank" href="<var expand_filename(clean_path($image))>"><var get_filename($image)></a>
 		-(<em><var $size> B, <var $width>x<var $height></em>)</span>
 		<span class="thumbnailmsg"><const S_THUMB></span><br />
 
 		<if $thumbnail>
-			<a target="_blank" href="<var expand_filename($image)>">
+			<a target="_blank" href="<var expand_filename(clean_path($image))>">
 			<img src="<var expand_filename($thumbnail)>" width="<var $tn_width>" height="<var $tn_height>" alt="<var $size>" class="thumb" /></a>
 		</if>
 		<if !$thumbnail>
-			<div class="nothumb"><a target="_blank" href="<var expand_filename($image)>"><const S_NOTHUMB></a></div>
+			<div class="nothumb"><a target="_blank" href="<var expand_filename(clean_path($image))>"><const S_NOTHUMB></a></div>
 		</if>
 	</if>
 
 	<a name="<var $num>"></a>
 	<label><input type="checkbox" name="delete" value="<var $thread>,<var $num>" />
 	<span class="filetitle"><var $title></span>
-	<if $capped><em></if>
-	<if $link><span class="postername"><a href="<var $link>"><var $name></a></span><if $trip><span class="postertrip"><a href="<var $link>"><var $trip><if $capped><const S_CAPPED></if></a></span></if></if>
-	<if !$link><span class="postername"><var $name></span><if $trip><span class="postertrip"><var $trip><if $capped><const S_CAPPED></if></span></if></if>
-	<if $capped></em></if>
+	<if $link><span class="postername"><a href="<var $link>"><var $name></a></span><if $trip><span class="postertrip"><a href="<var $link>"><if !$capped><var $trip></if><if $capped><var $capped></if></a></span></if></if>
+	<if !$link><span class="postername"><var $name></span><if $trip><span class="postertrip"><if !$capped><var $trip></if><if $capped><var $capped></if></span></if></if>
 	<var $date></label>
 	<span class="reflink">
 	<a href="javascript:w_insert('&gt;&gt;<var $num>','<var $self>/<var $thread>/')">No.<var $num></a>
@@ -322,10 +313,8 @@ use constant REPLY_TEMPLATE => compile_template( q{
 	<a name="<var $num>"></a>
 	<label><input type="checkbox" name="delete" value="<var $thread>,<var $num>" />
 	<span class="replytitle"><var $title></span>
-	<if $capped><em></if>
-	<if $link><span class="commentpostername"><a href="<var $link>"><var $name></a></span><if $trip><span class="postertrip"><a href="<var $link>"><var $trip><if $capped><const S_CAPPED></if></a></span></if></if>
-	<if !$link><span class="commentpostername"><var $name></span><if $trip><span class="postertrip"><var $trip><if $capped><const S_CAPPED></if></span></if></if>
-	<if $capped></em></if>
+	<if $link><span class="commentpostername"><a href="<var $link>"><var $name></a></span><if $trip><span class="postertrip"><a href="<var $link>"><if !$capped><var $trip></if><if $capped><var $capped></if></a></span></if></if>
+	<if !$link><span class="commentpostername"><var $name></span><if $trip><span class="postertrip"><if !$capped><var $trip></if><if $capped><var $capped></if></span></if></if>
 	<var $date></label>
 	<span class="reflink">
 	<a href="javascript:w_insert('&gt;&gt;<var $num>','<var $self>/<var $thread>/')">No.<var $num></a>
@@ -333,16 +322,16 @@ use constant REPLY_TEMPLATE => compile_template( q{
 
 	<if $image>
 		<br />
-		<span class="filesize"><const S_PICNAME><a target="_blank" href="<var expand_filename($image)>"><var get_filename($image)></a>
+		<span class="filesize"><const S_PICNAME><a target="_blank" href="<var expand_filename(clean_path($image))>"><var get_filename($image)></a>
 		-(<em><var $size> B, <var $width>x<var $height></em>)</span>
 		<span class="thumbnailmsg"><const S_THUMB></span><br />
 
 		<if $thumbnail>
-			<a target="_blank" href="<var expand_filename($image)>">
+			<a target="_blank" href="<var expand_filename(clean_path($image))>">
 			<img src="<var expand_filename($thumbnail)>" width="<var $tn_width>" height="<var $tn_height>" alt="<var $size>" class="thumb" /></a>
 		</if>
 		<if !$thumbnail>
-			<div class="nothumb"><a target="_blank" href="<var expand_filename($image)>"><const S_NOTHUMB></a></div>
+			<div class="nothumb"><a target="_blank" href="<var expand_filename(clean_path($image))>"><const S_NOTHUMB></a></div>
 		</if>
 	</if>
 
@@ -382,6 +371,6 @@ use constant ERROR_TEMPLATE => compile_template(NORMAL_HEAD_INCLUDE.q{
 
 
 
-sub get_filename($) { my $path=shift; $path=~m!([^/]+)$!; $1 }
+sub get_filename($) { my $path=shift; $path=~m!([^/]+)$!; clean_string($1) }
 
 1;

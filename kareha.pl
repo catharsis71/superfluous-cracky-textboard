@@ -15,14 +15,16 @@ BEGIN { require 'templates.pl'; }
 BEGIN { require 'captcha.pl'; }
 BEGIN { require 'wakautils.pl'; }
 
+return 1 if(caller);
+
 
 
 #
 # Global init
 #
 
-my $replyrange_re=qr/(?:[0-9\-,lrq]|&#44;)*[0-9\-lrq]/; # regexp to match reply ranges for >> links
-my $protocol_re=qr/(?:http|https|ftp|mailto|nntp)/;
+my $replyrange_re=qr/n?(?:[0-9\-,lrq]|&#44;)*[0-9\-lrq]/; # regexp to match reply ranges for >> links
+my $protocol_re=qr/(?:http|https|ftp|mailto|news|irc)/;
 
 no strict;
 $stylesheets=get_stylesheets(); # make stylesheets visible to the templates
@@ -35,7 +37,7 @@ my $task=$query->param("task");
 unless(-e HTML_SELF)
 {
 	build_pages();
-	upgrade_threads();
+	update_threads();
 }
 
 if(!$task)
@@ -57,9 +59,11 @@ if($task eq "post")
 	my $captcha=$query->param("captcha");
 	my $password=$query->param("password");
 	my $file=$query->param("file");
+	my $markup=$query->param("markup");
+	my $savemarkup=$query->param("savemarkup");
 	my $key=$query->cookie("captchakey");
 
-	post_stuff($thread,$name,$link,$title,$comment,$captcha,$key,$password,$file,$file);
+	post_stuff($thread,$name,$link,$title,$comment,$captcha,$key,$password,$markup,$savemarkup,$file,$file);
 }
 elsif($task eq "delete")
 {
@@ -71,24 +75,33 @@ elsif($task eq "delete")
 }
 elsif($task eq "deletethread")
 {
-	make_error(S_BADDELPASS) unless($query->param("admin") eq ADMIN_PASS);
+	make_error(S_BADDELPASS) unless check_admin_pass($query->param("admin"));
 
 	my $thread=$query->param("thread");
 	delete_thread($thread);
 }
 elsif($task eq "permasagethread")
 {
-	make_error(S_BADDELPASS) unless($query->param("admin") eq ADMIN_PASS);
+	make_error(S_BADDELPASS) unless check_admin_pass($query->param("admin"));
 
 	my $thread=$query->param("thread");
-	permasage_thread($thread);
+	my $state=$query->param("state");
+	permasage_thread($thread,$state);
+}
+elsif($task eq "closethread")
+{
+	make_error(S_BADDELPASS) unless check_admin_pass($query->param("admin"));
+
+	my $thread=$query->param("thread");
+	my $state=$query->param("state");
+	close_thread($thread,$state);
 }
 elsif($task eq "rebuild")
 {
-	make_error(S_BADDELPASS) unless($query->param("admin") eq ADMIN_PASS);
+	make_error(S_BADDELPASS) unless check_admin_pass($query->param("admin"));
 
 	build_pages();
-	upgrade_threads();
+	update_threads();
 }
 else
 {
@@ -97,7 +110,8 @@ else
 
 release_log($log);
 
-make_http_forward(HTML_SELF,ALTERNATE_REDIRECT);
+if($query->param("r")) { make_http_forward($ENV{HTTP_REFERER},ALTERNATE_REDIRECT) }
+else { make_http_forward(HTML_SELF,ALTERNATE_REDIRECT) }
 
 #
 # End of main code
@@ -107,9 +121,8 @@ make_http_forward(HTML_SELF,ALTERNATE_REDIRECT);
 sub show_thread($)
 {
 	my ($path)=@_;
-	my ($thread,$ranges)=$path=~m!/([0-9]+)/?(.*)!;
-	my $filename=RES_DIR.$thread.PAGE_EXT;
-	my $modified=(stat $filename)[9];
+	my ($threadnum,$ranges)=$path=~m!/([0-9]+)(?:/(.*)|)!i;
+	my $modified=(stat RES_DIR.$threadnum.PAGE_EXT)[9];
 
 	if($ENV{HTTP_IF_MODIFIED_SINCE})
 	{
@@ -121,91 +134,20 @@ sub show_thread($)
 		}
 	}
 
-	my @page=read_array($filename);
-	make_error(S_NOTHREADERR) unless(@page);
-
-	my @posts;
-	my $total=@page-3;
-
-	foreach my $range (split /,/,$ranges)
-	{
-		if($range=~/^([0-9]*)-([0-9]*)$/)
-		{
-			my $start=($1 or 1);
-			my $end=($2 or $total);
-
-			$start=$total if($start>$total);
-			$end=$total if($end>$total);
-
-			if($start<$end) { push @posts,($start..$end) }
-			else { push @posts,reverse ($end..$start) }
-		}
-		elsif($range=~/^([0-9]+)$/)
-		{
-			my $post=$1;
-			push @posts,$post if($post>0 and $post<=$total);
-		}
-		elsif($range=~/^l([0-9]+)$/i)
-		{
-			my $start=$total-$1+1;
-			$start=1 if($start<1);
-			push @posts,($start..$total);
-		}
-		elsif($range=~/^r([0-9]*)$/i)
-		{
-			my $num=($1 or 1);
-			push @posts,int (rand $total)+1 for(1..$num);
-		}
-		elsif($range=~/^q([0-9]+)$/i)
-		{
-			my $num=$1;
-
-			push @posts,$num;
-			OUTER: foreach my $post (1..$total)
-			{
-				next if($post eq $num);
-				while($page[$post+1]=~/&gt;&gt;($replyrange_re)/g)
-				{
-					if(in_range($num,$1)) { push @posts,$post; next OUTER; }
-				}
-			}
-		}
-	}
-
-	@posts=(1..$total) unless(@posts);
+	my $thread=filter_post_ranges($threadnum,$ranges);
 
 	print "Content-Type: ".get_xhtml_content_type(CHARSET,USE_XHTML)."\n";
 	print "Date: ".make_date(time(),"http")."\n";
 	print "Last-Modified: ".make_date($modified,"http")."\n";
 	print "\n";
 
-	print join "\n",($page[1],(map { $page[$_+1] } @posts),$page[$#page]);
-}
+	my %thread=%{$thread};
 
-sub in_range($$)
-{
-	my ($num,$ranges)=@_;
-
-	foreach my $range (split /(,|&#44;)/,$ranges)
-	{
-		if($range=~/^([0-9]*)-([0-9]*)$/)
-		{
-			my $start=($1 or 1);
-			my $end=($2 or 1000000); # arbitary large number
-
-			($start,$end)=($end,$start) if($start>$end);
-
-			return 1 if($num>=$start and $num<=$end);
-		}
-		elsif($range=~/^([0-9]+)$/)
-		{
-			return 1 if($num==$1);
-		}
-		#elsif($range=~/^l([0-9]+)$/i) {} # l ranges never match
-		#elsif($range=~/^r([0-9]*)$/i) {} # r ranges never match
-		#elsif($range=~/^q([0-9]+)$/i) {} # q ranges never match
-	}
-	return 0;
+	print join "\n",(
+		THREAD_HEAD_TEMPLATE->(%{$thread}),
+		(map { $$_{text} } @{$$thread{posts}}),
+		THREAD_FOOT_TEMPLATE->(%{$thread}),
+	);
 }
 
 sub build_pages()
@@ -273,11 +215,10 @@ sub build_pages()
 		# fix up each thread
 		foreach my $thread (@{$$page{threads}})
 		{
-			my @threadpage=read_array($$thread{filename});
-			shift @threadpage; # drop the metadata
+			read_thread($thread);
 
 			my $posts=$$thread{postcount};
-			my $images=grep { get_images($_) } @threadpage[2..$posts];
+			my $images=grep { get_post_images($thread,$_) } 1..$posts;
 			my $curr_replies=$posts-1;
 			my $curr_images=$images;
 			my $max_replies=REPLIES_PER_THREAD;
@@ -287,31 +228,18 @@ sub build_pages()
 			# drop replies until we have few enough replies and images
 			while($curr_replies>$max_replies or $curr_images>$max_images)
 			{
-				$curr_images-- if(get_images($threadpage[$start]));
+				$curr_images-- if(get_post_images($thread,$start));
 				$curr_replies--;
 				$start++;
 			}
 
-			# fix up and abbreviate posts
-			my @posts=map {
-				my %post;
-				my $reply=$threadpage[$_];
-				my $abbrev=abbreviate_reply($reply);
+			filter_post_ranges($thread,"l$curr_replies",MAX_LINES_SHOWN);
 
-				$post{postnum}=$_;
-				$post{first}=($_==1);
-				$post{abbrev}=$abbrev?1:0;
-				$post{reply}=$abbrev?$abbrev:$reply;
-
-				\%post;
-			} (1,$start..$posts);
-
-			$$thread{posts}=\@posts;
-			$$thread{omit}=$start-2;
+			$$thread{omit}=$posts-$curr_replies-1;
 			$$thread{omitimages}=$images-$curr_images;
 
-			$$thread{next}=$$thread{num}%(THREADS_DISPLAYED)+1;
-			$$thread{prev}=($$thread{num}+(THREADS_DISPLAYED)-2)%(THREADS_DISPLAYED)+1;
+			$$thread{nextnum}=$$thread{num}%(THREADS_DISPLAYED)+1;
+			$$thread{prevnum}=($$thread{num}+(THREADS_DISPLAYED)-2)%(THREADS_DISPLAYED)+1;
 		}
 
 		write_array($$page{filename},MAIN_PAGE_TEMPLATE->(
@@ -338,40 +266,14 @@ sub build_pages()
 	}
 }
 
-sub abbreviate_reply($)
-{
-	my ($reply)=@_;
-
-	if($reply=~m!^(.*?<div class="replytext">)(.*?)(</div>.*$)!s)
-	{
-		my ($prefix,$comment,$postfix)=($1,$2,$3);
-
-		my $abbrev=abbreviate_html($comment,MAX_LINES_SHOWN,APPROX_LINE_LENGTH);
-		return $prefix.$abbrev.$postfix if($abbrev);
-	}
-	else
-	{
-		my $abbrev=abbreviate_html($reply,MAX_LINES_SHOWN,APPROX_LINE_LENGTH);
-		return $abbrev if($abbrev);
-	}
-
-	return undef;
-}
-
-sub upgrade_threads()
+sub update_threads()
 {
 	my @threads=get_threads(1);
 
 	foreach my $thread (@threads)
 	{
-		my @threadpage=read_array($$thread{filename});
-
-		my $num=$$thread{postcount};
-
-		$threadpage[1]=THREAD_HEAD_TEMPLATE->(%{$thread});
-		$threadpage[$num+2]=THREAD_FOOT_TEMPLATE->(%{$thread});
-
-		write_array($$thread{filename},@threadpage);
+		read_thread($thread);
+		write_thread($thread);
 	}
 }
 
@@ -381,9 +283,9 @@ sub upgrade_threads()
 # Posting
 #
 
-sub post_stuff($$$$$$$$$$)
+sub post_stuff($$$$$$$$$$$$)
 {
-	my ($thread,$name,$link,$title,$comment,$captcha,$key,$password,$file,$uploadname)=@_;
+	my ($thread,$name,$link,$title,$comment,$captcha,$key,$password,$markup,$savemarkup,$file,$uploadname)=@_;
 
 	# get a timestamp for future use
 	my $time=time();
@@ -428,26 +330,23 @@ sub post_stuff($$$$$$$$$$)
 	make_error(S_SPAM) if(spam_check($name,SPAM_FILE));
 	make_error(S_SPAM) if(spam_check($link,SPAM_FILE));
 
-	# check if thread exists
-	make_error(S_NOTHREADERR) if($thread and !-e RES_DIR.$thread.PAGE_EXT);
-
 	# remember cookies
 	my $c_name=$name;
 	my $c_link=$link;
 	my $c_password=$password;
+	my $c_markup=$markup;
 
 	# kill the name if anonymous posting is being enforced
 	if(FORCED_ANON)
 	{
 		$name='';
-		if($link=~/sage/i) { $link='sage'; }
-		else { $link=''; }
+		if($link=~/sage/i) { $link='sage' }
+		else { $link='' }
 	}
 
 	# clean up the inputs
 	$link=clean_string($link);
 	$title=clean_string($title);
-	$comment=clean_string($comment);
 
 	# fix up the link
 	$link="mailto:$link" if($link and $link!~/^$protocol_re:/);
@@ -455,10 +354,14 @@ sub post_stuff($$$$$$$$$$)
 	# process the tripcode
 	my ($trip,$capped);
 	($name,$trip)=process_tripcode($name,TRIPKEY,SECRET,CHARSET);
-	$capped=1 if(grep { $trip eq $_ } ADMIN_TRIPS);
+	my %capped_trips=CAPPED_TRIPS;
+	$capped=$capped_trips{$trip};
 
-	# insert default values for empty fields
+	# insert anonymous name if none entered
 	$name=make_anonymous($ip,$time,($thread or $time)) unless($name or $trip);
+
+	# reveal host when name is "fusianasan"
+	($name,$trip)=("",resolve_host($ENV{REMOTE_ADDR}).$trip) if($name=~/fusianasan/i);
 
 	# check for posting limitations
 	unless($capped)
@@ -482,7 +385,7 @@ sub post_stuff($$$$$$$$$$)
 	$thread=make_thread($title,$time,$name.$trip) unless($thread);
 
 	# format the comment
-	$comment=format_comment($comment,$thread);
+	$comment=format_comment($comment,$markup,$thread);
 
 	# generate date
 	my $date=make_date($time,DATE_STYLE);
@@ -492,7 +395,7 @@ sub post_stuff($$$$$$$$$$)
 
 	# add the reply to the thread
 	my $num=make_reply(
-		ip=>$ip,thread=>$thread,name=>$name,trip=>$trip,link=>$link,capped=>($capped and VISIBLE_ADMINS),
+		ip=>$ip,thread=>$thread,name=>$name,trip=>$trip,link=>$link,capped=>$capped,
 		time=>$time,date=>$date,title=>$title,comment=>$comment,
 		image=>$filename,ext=>$ext,size=>$size,md5=>$md5,width=>$width,height=>$height,
 		thumbnail=>$thumbnail,tn_width=>$tn_width,tn_height=>$tn_height,
@@ -508,6 +411,7 @@ sub post_stuff($$$$$$$$$$)
 
 	# set the name, email and password cookies, plus a new captcha key
 	make_cookies(name=>$c_name,link=>$c_link,password=>$c_password,
+	$savemarkup?(markup=>$c_markup):(),
 	captchakey=>make_random_string(8),-charset=>CHARSET,-autopath=>COOKIE_PATH); # yum!
 }
 
@@ -522,47 +426,94 @@ sub proxy_check($)
 	}
 }
 
-sub format_comment($$)
+sub format_comment($$$)
 {
-	my ($comment,$thread)=@_;
+	my ($comment,$markup,$thread)=@_;
 
-	# hide >>1 references from the quoting code
-	$comment=~s/&gt;&gt;((?:[0-9\-,lr]|&#44;)+)/&gtgt;$1/g;
+	$markup=DEFAULT_MARKUP unless $markup;
 
-	my $handler=sub # fix up >>1 references
-	{
-		my $line=shift;
-		$line=~s!&gtgt;($replyrange_re)!\<a href="$ENV{SCRIPT_NAME}/$thread/$1"\>&gt;&gt;$1\</a\>!gm;
-		return $line;
-	};
-
-	if(ENABLE_WAKABAMARK) { $comment=do_wakabamark($comment,$handler) }
-	else { $comment="<p>".simple_format($comment,$handler)."</p>" }
+	if($markup eq "none") { $comment=simple_format($comment,$thread) }
+	elsif($markup eq "html") { $comment=html_format($comment,$thread) }
+	elsif($markup eq "raw") { $comment=raw_html_format($comment,$thread) }
+	elsif($markup eq "aa") { $comment=aa_format($comment,$thread) }
+	else { $comment=wakabamark_format($comment,$thread) }
 
 	# fix <blockquote> styles for old stylesheets
 	$comment=~s/<blockquote>/<blockquote class="unkfunc">/g if(FUDGE_BLOCKQUOTES);
 
-	# restore >>1 references hidden in code blocks
-	$comment=~s/&gtgt;/&gt;&gt;/g;
-
 	return $comment;
 }
 
-sub simple_format($@)
+sub simple_format($$)
 {
-	my ($text,$handler)=@_;
+	my ($text,$thread)=@_;
+
 	return join "<br />",map
 	{
 		my $line=$_;
 
 		# make URLs into links
-		$line=~s{($protocol_re://[^\s<>"]*?)((?:\s|<|>|"|\.|\)|\]|!|\?|,|&#44;|&quot;)*(?:[\s<>"]|$))}{\<a href="$1"\>$1\</a\>$2}sgi;
+		$line=~s{($protocol_re://[^\s<>"]*?)((?:\s|<|>|"|\.|\)|\]|!|\?|,|&#44;|&quot;)*(?:[\s<>"]|$))}{\<a href="$1" rel="nofollow"\>$1\</a\>$2}sgi;
 
-		$line=$handler->($line) if($handler);
+		$line=~s!&gt;&gt;($replyrange_re)!\<a href="$ENV{SCRIPT_NAME}/$thread/$1" rel="nofollow"\>&gt;&gt;$1\</a\>!gm;
 
 		$line;
-	} split /\n/,$text;
+	} split /(?:\r\n|\n|\r)/,clean_string($text);
 }
+
+sub aa_format($$)
+{
+	my ($text,$thread)=@_;
+
+	return '<div class="aa">'.simple_format($text,$thread).'</div>';
+}
+
+sub wakabamark_format($$)
+{
+	my ($text,$thread)=@_;
+
+	$text=clean_string($text);
+
+	# hide >>1 references from the quoting code
+	$text=~s/&gt;&gt;($replyrange_re)/&gtgt;$1/g;
+
+	my $handler=sub # fix up >>1 references
+	{
+		my $line=shift;
+		$line=~s!&gtgt;($replyrange_re)!\<a href="$ENV{SCRIPT_NAME}/$thread/$1" rel="nofollow"\>&gt;&gt;$1\</a\>!gm;
+		return $line;
+	};
+
+	$text=do_wakabamark($text,$handler);
+
+	# restore >>1 references hidden in code blocks
+	$text=~s/&gtgt;/&gt;&gt;/g;
+
+	return $text;
+}
+
+sub html_format($$)
+{
+	my ($text,$thread)=@_;
+
+	$text=sanitize_html($text,ALLOWED_HTML);
+
+	$text=~s!&gt;&gt;($replyrange_re)!\<a href="$ENV{SCRIPT_NAME}/$thread/$1" rel="nofollow"\>&gt;&gt;$1\</a\>!gm;
+	$text=~s!(?:\r\n|\n|\r)!<br />!sg;
+
+	return $text;
+}
+
+sub raw_html_format($4)
+{
+	my ($text,$thread)=@_;
+
+	$text=sanitize_html($text,ALLOWED_HTML);
+	$text=~s!\s+! !sg;
+
+	return $text;
+}
+
 
 sub make_anonymous($$$)
 {
@@ -575,7 +526,7 @@ sub make_anonymous($$$)
 	$string.=",".$ENV{SCRIPT_NAME} if(SILLY_ANONYMOUS=~/board/i);
 	$string.=",".$thread if(SILLY_ANONYMOUS=~/thread/i);
 
-	srand unpack "N",rc4(null_string(4),"s".$string.SECRET);
+	srand unpack "N",hide_data($string,4,"silly",SECRET);
 
 	return cfg_expand("%G% %W%",
 		W => ["%B%%V%%M%%I%%V%%F%","%B%%V%%M%%E%","%O%%E%","%B%%V%%M%%I%%V%%F%","%B%%V%%M%%E%","%O%%E%","%B%%V%%M%%I%%V%%F%","%B%%V%%M%%E%"],
@@ -594,51 +545,41 @@ sub make_id_code($$$$)
 {
 	my ($ip,$time,$link,$thread)=@_;
 
-	return EMAIL_ID if($link and EMAIL_ID);
+	return EMAIL_ID if($link and DISPLAY_ID=~/link/i);
+	return EMAIL_ID if($link=~/sage/i and DISPLAY_ID=~/sage/i);
 
-	my $string=$ip;
+	return resolve_host($ENV{REMOTE_ADDR}) if(DISPLAY_ID=~/host/i);
+	return $ENV{REMOTE_ADDR} if(DISPLAY_ID=~/ip/i);
+
+	my $string="";
 	$string.=",".int($time/86400) if(DISPLAY_ID=~/day/i);
 	$string.=",".$ENV{SCRIPT_NAME} if(DISPLAY_ID=~/board/i);
 	$string.=",".$thread if(DISPLAY_ID=~/thread/i);
-	return encode_base64(rc4(null_string(6),"i".$string.SECRET),"");
+
+	return mask_ip($ENV{REMOTE_ADDR},make_key("mask",SECRET,32).$string) if(DISPLAY_ID=~/mask/i);
+
+	return hide_data($ip.$string,6,"id",SECRET,1);
 }
 
 sub make_reply(%)
 {
 	my (%vars)=@_;
 
-	my $filename=RES_DIR.$vars{thread}.PAGE_EXT;
-	my @page=read_array($filename);
-	my %meta=parse_meta_header($page[0]);
-	my $size=-s $filename;
+	my $thread=read_thread($vars{thread});
 
-	my $num=$meta{postcount}+1;
+	make_error(S_THREADCLOSED) if($$thread{closed});
 
-	$meta{postcount}++;
-	$meta{lasthit}=$vars{time} unless($vars{link}=~/sage/i or $meta{postcount}>=MAX_RES or $meta{permasage}); # bump unless sage, too many replies, or permasage
+	$$thread{postcount}++;
+	$$thread{lastmod}=$vars{time};
+	$$thread{lasthit}=$vars{time} unless($vars{link}=~/sage/i or $$thread{postcount}>=MAX_RES or $$thread{permasage}); # bump unless sage, too many replies, or permasage
 
-	$page[0]=make_meta_header(%meta);
-	$page[1]=THREAD_HEAD_TEMPLATE->(%meta,thread=>$vars{thread},size=>$size);
-	$page[$num+1]=REPLY_TEMPLATE->(%vars,num=>$num);
-	$page[$num+2]=THREAD_FOOT_TEMPLATE->(%meta,thread=>$vars{thread},size=>$size);
+	my $num=$$thread{postcount};
+	set_post_text($thread,$num,REPLY_TEMPLATE->(%vars,num=>$num));
 
-	write_array($filename,@page);
+	write_thread($thread);
 
 	return $num;
 }
-
-sub make_thread($$$)
-{
-	my ($title,$time,$author)=@_;
-	my $filename=RES_DIR.$time.PAGE_EXT;
-
-	make_error(S_THREADCOLL) if(-e $filename);
-
-	write_array($filename,make_meta_header(title=>$title,postcount=>0,lasthit=>$time,permasage=>0,author=>$author),"","");
-
-	return $time;
-}
-
 
 
 
@@ -675,84 +616,507 @@ sub trim_threads()
 	while(@threads>$max_threads or $posts>$max_posts or $size>$max_size)
 	{
 		my $thread=pop @threads;
-		my @page=read_array($$thread{filename});
-		foreach my $reply (@page[2..$#page-1])
+		read_thread($thread);
+
+		foreach my $num (1..$$thread{postcount})
 		{
-			my ($image,$thumb)=get_images($reply);
+			my ($image,$thumb)=get_post_images($thread,$num);
 			$size-=-s $image;
 		}
 		$posts-=$$thread{postcount};
 
 		delete_thread($$thread{thread});
 	}
+
+	foreach my $thread (@threads)
+	{
+		close_thread($$thread{thread}) if(AUTOCLOSE_POSTS and $$thread{postcount}>=AUTOCLOSE_POSTS);
+		close_thread($$thread{thread}) if(AUTOCLOSE_DAYS and (time()-$$thread{lastmod})>=AUTOCLOSE_DAYS*86400);
+		close_thread($$thread{thread}) if(AUTOCLOSE_SIZE and $$thread{size}>=AUTOCLOSE_SIZE*1024);
+	}
 }
 
 sub delete_post($$$$)
 {
-	my ($thread,$post,$password,$fileonly)=@_;
+	my ($threadnum,$postnum,$password,$fileonly)=@_;
+	my $admin_pass=check_admin_pass($password);
 
 	make_error(S_BADDELPASS) unless($password);
-	make_error(S_BADDELPASS) unless($password eq ADMIN_PASS or match_password($log,$thread,$post,$password));
+	make_error(S_BADDELPASS) unless($admin_pass or match_password($log,$threadnum,$postnum,$password));
 
 	my $reason;
-	if($password eq ADMIN_PASS) { $reason="mod"; }
+	if($admin_pass) { $reason="mod"; }
 	else { $reason="user"; }
 
-	my $filename=RES_DIR.$thread.PAGE_EXT;
-	my @page=read_array($filename);
-	return unless(@page);
+	my $thread=read_thread($threadnum);
+	return unless $thread;
 
-	my %meta=parse_meta_header($page[0]);
-	if($post==1 and !$fileonly)
+	if($postnum==1 and !$fileonly)
 	{
-		if(DELETE_FIRST eq 'remove' or (DELETE_FIRST eq 'single' and $meta{postcount}==1))
-		{ delete_thread($thread); return }
+		if(DELETE_FIRST eq 'remove' or (DELETE_FIRST eq 'single' and $$thread{postcount}==1))
+		{ delete_thread($threadnum); return }
 	}
 
 	# remove images
-	unlink get_images($page[$post+1]);
+	unlink get_post_images($thread,$postnum);
 
 	# remove post
 	unless($fileonly)
 	{
-		$page[$post+1]=DELETED_TEMPLATE->(num=>$post,reason=>$reason);
-		write_array($filename,@page);
+		set_post_text($thread,$postnum,DELETED_TEMPLATE->(num=>$postnum,reason=>$reason));
+		write_thread($thread);
 	}
 }
 
 sub delete_thread($)
 {
-	my ($thread)=@_;
+	my ($threadnum)=@_;
 
-	make_error(S_UNUSUAL) if($thread=~/[^0-9]/); # check to make sure the thread argument is safe
+	make_error(S_UNUSUAL) if($threadnum=~/[^0-9]/); # check to make sure the thread argument is safe
 
-	my $filename=RES_DIR.$thread.PAGE_EXT;
-	my @page=read_array($filename);
+	my $thread=read_thread($threadnum);
 
 	# remove images
-	foreach my $reply (@page[2..$#page-1]) { unlink get_images($reply) }
+	foreach my $num (1..$$thread{postcount}) { unlink get_post_images($thread,$num) }
 
-	unlink RES_DIR.$thread.PAGE_EXT;
+	unlink $$thread{filename};
 
 	build_pages();
 }
 
-sub permasage_thread($)
+sub permasage_thread($$)
 {
-	my ($thread)=@_;
+	my ($threadnum,$state)=@_;
 
-	make_error(S_UNUSUAL) if($thread=~/[^0-9]/); # check to make sure the thread argument is safe
+	make_error(S_UNUSUAL) if($threadnum=~/[^0-9]/); # check to make sure the thread argument is safe
 
-	my $filename=RES_DIR.$thread.PAGE_EXT;
-	my @page=read_array($filename);
-	my %meta=parse_meta_header($page[0]);
-
-	$meta{permasage}=1;
-
-	$page[0]=make_meta_header(%meta);
-	write_array($filename,@page);
+	my $thread=read_thread($threadnum);
+	$$thread{permasage}=$state;
+	write_thread($thread);
 
 	build_pages();
+}
+
+sub close_thread($$)
+{
+	my ($threadnum,$state)=@_;
+
+	make_error(S_UNUSUAL) if($threadnum=~/[^0-9]/); # check to make sure the thread argument is safe
+
+	my $thread=read_thread($threadnum);
+	$$thread{closed}=$state;
+	write_thread($thread);
+
+	build_pages();
+}
+
+
+
+
+
+#
+# Thread access utils
+#
+
+sub get_threads($)
+{
+	my ($bumped)=@_;
+
+	my @pages=map { get_thread($_) } glob(RES_DIR."*".PAGE_EXT);
+
+	if($bumped) { @pages=sort { $$b{lasthit}<=>$$a{lasthit} } @pages; }
+	else { @pages=sort { $$b{thread}<=>$$a{thread} } @pages; }
+
+	my $num=1;
+	$$_{num}=$num++ for(@pages);
+
+	return @pages;
+}
+
+sub get_thread($)
+{
+	my ($arg)=@_;
+	my ($thread,$filename);
+
+	if($arg=~/^[0-9]+$/)
+	{
+		$thread=$arg;
+		$filename=RES_DIR.$thread.PAGE_EXT;
+	}
+	else
+	{
+		my $re=RES_DIR.'([0-9]+)'.PAGE_EXT;
+		$filename=$arg;
+		($thread)=$filename=~/$re/;
+	}
+
+	open PAGE,$filename or make_error(S_NOTHREADERR);
+	my $head=<PAGE>;
+	close PAGE;
+
+	my ($code)=$head=~/\<!--(.*)--\>/;
+	return undef unless $code;
+	my %meta=%{eval $code};
+
+	$meta{lastmod}=$meta{lasthit} unless $meta{lastmod};
+
+	return {
+		%meta,
+		thread=>$thread,
+		filename=>$filename,
+		size=>-s $filename,
+	}
+}
+
+sub read_thread($)
+{
+	my $thread=shift;
+
+	$thread=get_thread($thread) or return undef if ref($thread) ne "HASH";
+	return $thread if $$thread{allposts};
+
+	my @page=map { s/\r//g; $_ } read_array($$thread{filename});
+	return undef unless @page;
+
+	shift @page; # drop metadata
+	$$thread{head}=shift @page;
+	$$thread{foot}=pop @page;
+
+	my @posts=map +{ text=>$page[$_],num=>$_+1 },(0..$#page);
+
+	$$thread{allposts}=$$thread{posts}=\@posts;
+
+	return $thread;
+}
+
+sub get_post_text($$)
+{
+	my ($thread,$postnum)=@_;
+	$thread=read_thread($thread);
+	return $$thread{allposts}[$postnum-1]{text};
+}
+
+sub set_post_text($$$)
+{
+	my ($thread,$postnum,$text)=@_;
+	$thread=read_thread($thread);
+	$$thread{allposts}[$postnum-1]={ text=>$text,num=>$postnum };
+	return $thread;
+}
+
+sub get_post_images($$)
+{
+	my ($thread,$postnum)=@_;
+	my $post=get_post_text($thread,$postnum);
+
+	my @images;
+	my $img_dir=quotemeta IMG_DIR;
+	my $thumb_dir=quotemeta THUMB_DIR;
+
+	push @images,$1 if($post=~m!<a [^>]*href="/[^>"]*($img_dir[^>"/]+)"!);
+	push @images,$1 if($post=~m!<img [^>]*src="/[^>"]*($thumb_dir[^>"/]+)"!);
+
+	return map { s/\%([0-9a-fA-F]{2})/chr hex $1/ge; $_ } @images;
+}
+
+sub filter_post_ranges($$;$)
+{
+	my ($thread,$ranges,$lines)=@_;
+
+	$thread=read_thread($thread);
+
+	my $nofirst;
+	$nofirst=1 if $ranges=~s/^n//i;
+
+	my @postnums;
+	my $total=$$thread{postcount};
+
+	foreach my $range (split /,/,$ranges)
+	{
+		if($range=~/^([0-9]*)-([0-9]*)$/)
+		{
+			my $start=($1 or 1);
+			my $end=($2 or $total);
+
+			$start=$total if $start>$total;
+			$end=$total if $end>$total;
+
+			if($start<$end) { push @postnums,($start..$end) }
+			else { push @postnums,reverse ($end..$start) }
+		}
+		elsif($range=~/^([0-9]+)$/)
+		{
+			my $post=$1;
+			push @postnums,$post if $post>0 and $post<=$total;
+		}
+		elsif($range=~/^l([0-9]+)$/i)
+		{
+			my $start=$total-$1+1;
+			$start=1 if $start<1;
+			push @postnums,($start..$total);
+		}
+		elsif($range=~/^r([0-9]*)$/i)
+		{
+			my $num=($1 or 1);
+			push @postnums,int (rand $total)+1 for(1..$num);
+		}
+		elsif($range=~/^q([0-9]+)$/i)
+		{
+			my $num=$1;
+
+			push @postnums,$num;
+			OUTER: foreach my $post (1..$total)
+			{
+				next if $post eq $num;
+				while(get_reply_text($post)=~/&gt;&gt;($replyrange_re)/g)
+				{
+					if(in_range($num,$1)) { push @postnums,$post; next OUTER; }
+				}
+			}
+		}
+	}
+
+	@postnums=(1..$total) unless @postnums;
+
+	if($ranges=~/^[0-9]*-[0-9]*$/ or $ranges=~/^l[0-9]+$/i)
+	{
+		my $start=$postnums[0];
+		my $end=$postnums[$#postnums];
+
+		if($start<=$end)
+		{
+			$$thread{prevpost}=$start-1 unless $start<=1;
+			$$thread{nextpost}=$end+1 unless $end>=$total;
+			unshift @postnums,1 unless $nofirst or $start==1;
+		}
+	}
+
+	# fix up and abbreviate posts
+	my @posts=map {
+		my %post;
+		my $text=get_post_text($thread,$_);
+
+		$post{text}=$text;
+		$post{num}=$_;
+
+		if($lines)
+		{
+			my $abbrev=abbreviate_post($text,$lines);
+			$post{abbreviation}=$abbrev||$text;
+			$post{abbreviated}=$abbrev?1:0;
+		}
+		else
+		{
+			$post{text}=$text;
+		}
+
+		\%post;
+	} @postnums;
+
+	$$thread{posts}=\@posts;
+
+	return $thread;
+}
+
+sub abbreviate_post($$)
+{
+	my ($post,$lines)=@_;
+
+#	if($post=~m!^(.*?<div class="replytext">)(.*?)(</div>.*$)!s)
+#	{
+#		my ($prefix,$comment,$postfix)=($1,$2,$3);
+#
+#		my $abbrev=abbreviate_html($comment,$lines,APPROX_LINE_LENGTH);
+#		return $prefix.$abbrev.$postfix if($abbrev);
+#	}
+#	else
+#	{
+		my $abbrev=abbreviate_html($post,$lines,APPROX_LINE_LENGTH);
+		return $abbrev if($abbrev);
+#	}
+
+	return undef;
+}
+
+sub in_range($$)
+{
+	my ($num,$ranges)=@_;
+
+	foreach my $range (split /(,|&#44;)/,$ranges)
+	{
+		if($range=~/^([0-9]*)-([0-9]*)$/)
+		{
+			my $start=($1 or 1);
+			my $end=($2 or 1000000); # arbitary large number
+
+			($start,$end)=($end,$start) if($start>$end);
+
+			return 1 if($num>=$start and $num<=$end);
+		}
+		elsif($range=~/^([0-9]+)$/)
+		{
+			return 1 if($num==$1);
+		}
+		#elsif($range=~/^l([0-9]+)$/i) {} # l ranges never match
+		#elsif($range=~/^r([0-9]*)$/i) {} # r ranges never match
+		#elsif($range=~/^q([0-9]+)$/i) {} # q ranges never match
+	}
+	return 0;
+}
+
+sub update_thread($)
+{
+	my $thread=shift;
+
+}
+
+sub write_thread($)
+{
+	my $thread=shift;
+
+	my @written=("postcount","author","title","lasthit","lastmod","permasage","closed");
+	my %meta;
+	@meta{@written}=@{$thread}{@written};
+
+	my @page;
+	$Data::Dumper::Terse=1;
+	$Data::Dumper::Indent=0;
+	push @page,'<!-- '.Dumper(\%meta).' -->';
+	push @page,THREAD_HEAD_TEMPLATE->(%{$thread});
+	push @page,map { get_post_text($thread,$_) } 1..$$thread{postcount};
+	push @page,THREAD_FOOT_TEMPLATE->(%{$thread});
+
+	write_array($$thread{filename},@page);
+}
+
+sub make_thread($$$)
+{
+	my ($title,$time,$author)=@_;
+	my $filename=RES_DIR.$time.PAGE_EXT;
+
+	make_error(S_THREADCOLL) if(-e $filename);
+
+	write_thread({
+		thread=>$time,
+		filename=>$filename,
+		title=>$title,
+		postcount=>0,
+		lasthit=>$time,
+		lastmod=>$time,
+		permasage=>0,
+		closed=>0,
+		author=>$author,
+		head=>"",
+		foot=>"",
+		posts=>[],
+		allposts=>[],
+	});
+
+	return $time;
+}
+
+
+
+
+#
+# Log fuctions
+#
+
+sub match_password($$$$)
+{
+	my ($log,$thread,$post,$password)=@_;
+	my $encpass=hide_password($password);
+
+	return 0 unless(ENABLE_DELETION);
+
+	foreach(@{$log})
+	{
+		my @data=split /\s*,\s*/;
+		if($data[0]==$thread and $data[1]==$post)
+		{
+ 			return 1 if($data[2] eq $encpass or decrypt_string($data[2],"cryptpass") eq $encpass);
+ 		}
+	}
+	return 0;
+}
+
+sub find_key($$)
+{
+	my ($log,$key)=@_;
+
+	foreach(@{$log})
+	{
+		my @data=split /\s*,\s*/;
+		return 1 if($data[4] eq $key);
+	}
+	return 0;
+}
+
+sub find_md5($$)
+{
+	my ($log,$md5)=@_;
+
+	foreach(@{$log})
+	{
+		my @data=split /\s*,\s*/;
+		return ($data[0],$data[1]) if($data[5] eq $md5 and -e $data[6]);
+	}
+	return ();
+}
+
+sub lock_log()
+{
+	open LOGFILE,"+>>".LOG_FILE or make_error(S_NOLOG);
+	eval "flock LOGFILE,LOCK_EX"; # may not work on some platforms - ignore it if it does not.
+	seek LOGFILE,0,0;
+
+	my @log=grep { /^([0-9]+)/; -e RES_DIR.$1.PAGE_EXT } read_array(\*LOGFILE);
+
+	# should remove MD5 for deleted files somehow
+	return \@log;
+}
+
+sub release_log(;$)
+{
+	my ($log)=@_;
+
+	if($log)
+	{
+		seek LOGFILE,0,0;
+		truncate LOGFILE,0;
+		write_array(\*LOGFILE,@$log);
+	}
+
+	close LOGFILE;
+}
+
+sub add_log($$$$$$$)
+{
+	my ($log,$thread,$post,$password,$ip,$key,$md5,$file)=@_;
+
+	$password=encrypt_string(hide_password($password),"cryptpass");
+	$ip=encrypt_string($ip,"ip");
+
+	unshift @$log,"$thread,$post,$password,$ip,$key,$md5,$file";
+}
+
+sub hide_password($)
+{
+	return hide_data(shift,6,"password",SECRET,1)
+}
+
+sub encrypt_string($$)
+{
+	my ($str,$key)=@_;
+	my $iv=make_random_string(8);
+	return $iv.';'.encode_base64(rc4($str,make_key($key,SECRET,32).$iv),"");
+}
+
+sub decrypt_string($$)
+{
+	my ($str,$key)=@_;
+	my ($iv,$crypt)=$str=~/(.*?);(.*)/;
+	return rc4(decode_base64($crypt),make_key($key,SECRET,32).$iv);
 }
 
 
@@ -787,131 +1151,22 @@ sub get_stylesheets()
 	return \@stylesheets;
 }
 
-
-
-#
-# Metadata access utils
-#
-
-sub get_threads($)
+sub check_admin_pass($)
 {
-	my ($bumped)=@_;
-
-	my @pages=map {
-		open PAGE,$_ or return undef;
-		my $head=<PAGE>;
-		close PAGE;
-		my %meta=parse_meta_header($head);
-
-		my $re=RES_DIR.'([0-9]+)'.PAGE_EXT;
-		my ($thread)=$_=~/$re/;
-
-		my $hash={ %meta,thread=>$thread,filename=>$_,size=>-s $_ };
-		$hash;
-	} glob(RES_DIR."*".PAGE_EXT);
-
-	if($bumped) { @pages=sort { $$b{lasthit}<=>$$a{lasthit} } @pages; }
-	else { @pages=sort { $$b{thread}<=>$$a{thread} } @pages; }
-
-	my $num=1;
-	$$_{num}=$num++ for(@pages);
-
-	return @pages;
-}
-
-sub parse_meta_header($)
-{
-	my ($header)=@_;
-	my ($code)=$header=~/\<!--(.*)--\>/;
-	return () unless $code;
-	return %{eval $code};
-}
-
-sub make_meta_header(%)
-{
-	my (%meta)=@_;
-	$Data::Dumper::Terse=1;
-	$Data::Dumper::Indent=0;
-	return '<!-- '.Dumper(\%meta).' -->';
-}
-
-sub match_password($$$$)
-{
-	my ($log,$thread,$post,$password)=@_;
-	my $encpass=encode_password($password);
-
-	return 0 unless(ENABLE_DELETION);
-
-	foreach(@{$log})
-	{
-		my @data=split /\s*,\s*/;
-		return 1 if($data[0]==$thread and $data[1]==$post and $data[2] eq $encpass);
-	}
+	my $password=shift;
+	return 1 if $password eq ADMIN_PASS;
+	return 1 if $password eq encode_admin_pass(ADMIN_PASS);
 	return 0;
 }
 
-sub find_key($$)
+sub encode_admin_pass($)
 {
-	my ($log,$key)=@_;
-
-	foreach(@{$log})
-	{
-		my @data=split /\s*,\s*/;
-		return 1 if($data[4] eq $key);
-	}
-	return 0;
+	my $crypt=hide_data((shift).$ENV{REMOTE_ADDR},9,"admin",SECRET,1);
+	$crypt=~tr/+/./; # for web shit
+	return $crypt;
 }
 
-sub find_md5($$)
-{
-	my ($log,$md5)=@_;
 
-	foreach(@{$log})
-	{
-		my @data=split /\s*,\s*/;
-		return ($data[0],$data[1]) if($data[5] eq $md5 and -e $data[6]);
-	}
-	return ();
-}
-
-sub lock_log()
-{
-	open LOGFILE,"+>>log.txt" or make_error(S_NOLOG);
-	eval "flock LOGFILE,LOCK_EX"; # may not work on some platforms - ignore it if it does not.
-	seek LOGFILE,0,0;
-
-	my @log=grep { /^([0-9]+)/; -e RES_DIR.$1.PAGE_EXT } read_array(\*LOGFILE);
-
-	# should remove MD5 for deleted files somehow
-	return \@log;
-}
-
-sub release_log(;$)
-{
-	my ($log)=@_;
-
-	if($log)
-	{
-		seek LOGFILE,0,0;
-		truncate LOGFILE,0;
-		write_array(\*LOGFILE,@$log);
-	}
-
-	close LOGFILE;
-}
-
-sub add_log($$$$$$$)
-{
-	my ($log,$thread,$post,$password,$ip,$key,$md5,$file)=@_;
-
-	$password=encode_password($password);
-	$ip=encode_ip($ip);
-
-	unshift @$log,"$thread,$post,$password,$ip,$key,$md5,$file";
-}
-
-sub encode_password($) { return encode_base64(rc4(null_string(6),"p".(shift).SECRET),""); }
-sub encode_ip($) { my $iv=make_random_string(8); return $iv.':'.encode_base64(rc4($_[0],"l".$iv.SECRET),""); }
 
 #
 # Error handling
@@ -940,19 +1195,6 @@ sub get_filetypes()
 	return join ", ",map { uc } sort keys %filetypes;
 }
 
-sub get_images($)
-{
-	my ($post)=@_;
-	my @images;
-	my $img_dir=quotemeta IMG_DIR;
-	my $thumb_dir=quotemeta THUMB_DIR;
-
-	push @images,$1 if($post=~m!<a [^>]*href="/[^>"]*($img_dir[^>"/]+)"!);
-	push @images,$1 if($post=~m!<img [^>]*src="/[^>"]*($thumb_dir[^>"/]+)"!);
-
-	return @images;
-}
-
 sub process_file($$$)
 {
 	my ($file,$uploadname,$time)=@_;
@@ -970,7 +1212,7 @@ sub process_file($$$)
 	# analyze file and check that it's in a supported format
 	my ($ext,$width,$height)=analyze_image($file,$uploadname);
 
-	my $known=$width or $filetypes{$ext};
+	my $known=$width || $filetypes{$ext};
 
 	make_error(S_BADFORMAT) unless(ALLOW_UNKNOWN or $known);
 	make_error(S_BADFORMAT) if(grep { $_ eq $ext } FORBIDDEN_EXTENSIONS);
@@ -1079,7 +1321,6 @@ sub process_file($$$)
 	{
 		my $newfilename=$uploadname;
 		$newfilename=~s!^.*[\\/]!!; # cut off any directory in filename
-		$newfilename=~s/[#<>"']/_/g; # remove special characters from filename
 		$newfilename=IMG_DIR.$newfilename;
 
 		unless(-e $newfilename) # verify no name clash

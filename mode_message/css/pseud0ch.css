@@ -20,7 +20,6 @@ body.threadpage {
 	background: #EFEFEF;
 	color: #000000;
 }
-
 body.backlogpage {
 	background: #FFFFFF;
 	color: #000000;
@@ -48,61 +47,56 @@ ol p:first-child, ul p:first-child {
 ol p:last-child, ul p:last-child {
 	margin-bottom: 0;
 }
+.aa {
+	font-family: Mona,'MS PGothic' !important; 
+}
 
 
-.mainpage #topbar {
+.outerbox {
 	background: #CCFFCC;
 	border: 1px outset grey;
 	padding: 7px;
 	margin-bottom: 1em;
 	margin-left: 2.5%;
 	margin-right: 2.5%;
+	clear: both;
 }
-.mainpage #stylebar {
-	float: left;
-	border-top: 1px inset grey;
-	border-bottom: 1px inset grey;
-	border-left: 1px inset grey;
+.innerbox {
+	border: 1px inset grey;
 	padding: 6px;
-	margin-bottom: 7px;
 }
-.mainpage #managerbar {
+#titlebox h1 {
+	font-size: 1.5em;
+	font-weight: normal;
+	padding: 0px;
+	margin: 0px;
+}
+#titlebox {
+	position: relative;
+}
+#titlebox .threadnavigation {
+	position: absolute;
+	right: 12px;
+	top: 12px;
+}
+#threadbox .threadlink {
+	padding-right: 0.5em;
+}
+#threadlinks {
 	text-align: right;
-	border-top: 1px inset grey;
-	border-bottom: 1px inset grey;
-	border-right: 1px inset grey;
-	padding: 6px;
+	font-weight: bold;
 }
-.mainpage #navbar a, .mainpage #managerbar a, .mainpage #stylebar a {
-	margin: 0em 0.1em 0em 0.1em;
+#createbox h2 {
+	color: #000000;
+	font-size: 1.2em;
+	font-weight: bold;
+	margin: 0em 0em 0.5em 0.3em;
 }
-
-.threadpage #topbar {
-	margin: 0.3em;
-	margin-bottom: 1em;
-	text-align: left;
-	border-bottom: 1px solid black;
-}
-.threadpage #navbar, .threadpage #managerbar, .threadpage #stylebar {
-	display: inline;
-	white-space: nowrap;
-	margin-right: 0.5em;
-}
-.threadpage #navbar a, .threadpage #managerbar a, .threadpage #stylebar a {
-	margin: 0em 0.1em 0em 0.1em;
+.threadcaptcha {
+	color: #000000;
 }
 
-.backlogpage #topbar {
-	margin: 0.3em;
-	margin-bottom: 1em;
-	text-align: left;
-	border-bottom: 1px solid black;
-}
-.backlogpage #navbar, .backlogpage #managerbar, .backlogpage #stylebar {
-	display: inline;
-	white-space: nowrap;
-	margin-right: 0.5em;
-}
+
 
 body.threadpage #threads {
 	margin-left: 2.5%;
@@ -130,18 +124,6 @@ body.backlogpage #threads {
 	background: #FFFFFF;
 }
 
-body.mainpage #threads h1 {
-	margin-left: 2.5%;
-	margin-right: 2.5%;
-	font-size: 2em;
-	font-weight: normal;
-	text-align: center;
-	padding: 0px;
-	margin: 0px;
-	border-top: 1px inset grey;
-	border-left: 1px inset grey;
-	border-right: 1px inset grey;
-}
 
 body.threadpage #threads h1 {
 	margin-left: 2.5%;
@@ -158,18 +140,6 @@ body.threadpage #threads h1 {
 
 body.backlogpage #threads h1 {
 	display:none
-}
-
-
-body.mainpage #threadlist {
-	background: #CCFFCC;
-
-	font-family: serif;
-	margin: 0px 0px 7px 0px;
-	padding: 6px;
-	border-left: 1px inset grey;
-	border-right: 1px inset grey;
-	border-bottom: 1px inset grey;
 }
 
 body.threadpage #threadlist {
@@ -189,13 +159,8 @@ body.backlogpage #threadlist {
 	padding: 6px;
 }
 
-#threadlist .threadlink {
-	padding-right: 0.5em;
-}
-#threadlist strong {
-	text-align: right;
-	font-weight: bold;
-}
+
+
 #oldthreadlist {
 	background: #FFFFFF;
 	font-family: serif;
@@ -209,24 +174,6 @@ body.backlogpage #threadlist {
 #oldthreadlist .manage {
 	font-size: small;
 	margin-left: 1em;
-}
-#threads form {
-	background: #CCFFCC;
-	font-family: serif;
-	color: #000000;
-	font-weight: bold;
-	margin: 0px;
-	padding: 6px;
-	border: 1px inset grey;
-}
-#threads input, #threads textarea {
-}
-#threads textarea {
-}
-#threads input[type=submit] {
-}
-.threadcaptcha {
-	color: #000000;
 }
 
 #posts {
@@ -260,11 +207,19 @@ body.backlogpage #threadlist {
 	border-left: 1px inset grey;
 	border-right: 1px inset grey;
 }
+.mainpage #posts h2 a {
+	color: #CC1105;
+	text-decoration: none;
+}
+.mainpage #posts h2 a:hover {
+	text-decoration: underline;
+}
 .threadpage #posts h2 {
 	color: #CC1105;
 	font-size: 1.2em;
 	font-weight: normal;
-	margin: 0em;
+	border-top: 2px ridge white;
+	margin: 1em 0 0 0;
 	padding: 0em 0em 0.5em 0em;
 }
 #posts h2 small {
@@ -335,7 +290,7 @@ body.backlogpage #threadlist {
 	position: relative;
 	top: -1.3em;
 }
-#posts img {
+#posts img.thumb, #posts a img {
 	border-width: 1px;
 	float: left;
 	margin: 0.5em 2em 0.5em 3em;
@@ -371,9 +326,17 @@ body.backlogpage #threadlist {
 	font-family: serif;
 	margin: 0px;
 }
+#posts form small a {
+	color: #000000;
+	text-decoration: none;
+}
+#posts form small a:hover {
+	color: #FF0000;
+	text-decoration: underline;
+}
 .threadpage #posts form {
-	padding-top: 1em;
-	border-top: 2px ridge grey;
+	padding-top: 0.5em;
+	border-top: 2px ridge white;
 }
 .mainpage #posts form {
 	padding: 3px;
@@ -381,17 +344,33 @@ body.backlogpage #threadlist {
 	border-right: 1px inset grey;
 	border-bottom: 1px inset grey;
 }
-#posts input, #posts textarea {
-/*	border: 1px solid #800000; */
-}
-#posts textarea {
-/*	-moz-border-radius: 4px; */
-}
 #posts input[type=submit] {
 }
 .postcaptcha {
 	color: #000000;
 }
+
+h4 {
+	color: #CC1105;
+	font-size: 1em;
+	font-weight: bold;
+	font-family: sans-serif;
+}
+
+
+#oldthreadlist {
+}
+#oldthreadlist th {
+	text-align: left;
+}
+#oldthreadlist .line0 {
+}
+#oldthreadlist .line1 {
+}
+#oldthreadlist a {
+	display: block;
+}
+
 
 #footer
 {

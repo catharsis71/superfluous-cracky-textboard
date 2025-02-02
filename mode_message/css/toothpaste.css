@@ -1,6 +1,7 @@
 html {
 	padding: 0px;
 	margin: 0px;
+	background: #FFFFFF;
 }
 body {
 	padding: 8px;
@@ -30,47 +31,46 @@ ol p:first-child, ul p:first-child {
 ol p:last-child, ul p:last-child {
 	margin-bottom: 0;
 }
-
-
-
-#topbar {
-	margin: 0.3em;
-	margin-bottom: 1em;
-	text-align: right;
-	font-size: small;
+.aa {
+	font-family: Mona,'MS PGothic' !important; 
 }
-#navbar, #managerbar, #stylebar {
-	display: inline;
+
+
+
+#navigation {
+	float: left;
 	white-space: nowrap;
-	line-height: 2em;
 	background: #FFEFE7;
 	padding: 3px 0px 3px 0px;
-	margin-left: 1em;
+	margin: 0 0 1em 1em;
 	border: 1px solid #CC0000;
+	font-size: small;
 	-moz-border-radius: 4px;
 }
-#navbar strong, #managerbar strong, #stylebar strong {
+#navigation strong {
 	background: #FFCFC0;
 	color: #800000;
 	font-weight: normal;
 	padding: 3px;
 	-moz-border-radius: 3px 0px 0px 3px;
 }
-#navbar a, #managerbar a, #stylebar a {
+#navigation a {
 	padding: 3px;
 }
 
 
 
-#threads {
+
+.outerbox, .backlogpage #threads {
 	background: #E7FFEF;
 	color: #008000;
 	padding: 4px;
-	margin-bottom: 2em;
-	-moz-border-radius: 6px;
 	clear: both;
 }
-#threads h1 {
+#titlebox {
+	-moz-border-radius: 6px 6px 0 0;
+}
+h1 {
 	color: #005F00;
 	text-align: center;
 	font-family: sans-serif;
@@ -79,53 +79,67 @@ ol p:last-child, ul p:last-child {
 	padding: 0px;
 	margin: 0px;
 }
-#threadlist {
+#titlebox {
+	position: relative;
+}
+#titlebox .threadnavigation {
+	position: absolute;
+	right: 0.3em;
+	top: 0.9em;
+}
+#rules, #threadbox .innerbox {
 	background: #FFFFFF;
 	font-family: serif;
 	margin: 3px;
-	padding: 3px;
+	padding: 6px;
 	-moz-border-radius: 4px;
 }
-#threadlist .threadlink {
+#stylebox {
+	padding: 1px 9px;
+	margin: -1px 0;
+}
+#threadbox {
+	margin-bottom: 2em;
+	-moz-border-radius: 0 0 6px 6px;
+}
+#threadbox .threadlink {
 	padding-right: 0.5em;
 }
-#threadlist strong {
+#threadlinks {
 	text-align: right;
 	font-weight: bold;
 }
-#oldthreadlist {
-	background: #FFFFFF;
-	font-family: serif;
-	margin: 3px;
-	padding: 3px;
+#createbox {
 	-moz-border-radius: 4px;
 }
-#oldthreadlist .threadlink {
-	display: block;
-}
-#oldthreadlist .manage {
-	font-size: small;
-	margin-left: 1em;
-}
-#threads form {
+#createbox form {
 	background: #D6F0E0;
 	font-family: serif;
 	margin: 3px;
 	padding: 3px;
 	-moz-border-radius: 4px;
 }
-#threads input, #threads textarea {
+#createbox h2 {
+	font-size: 1.2em;
+	font-weight: bold;
+	margin: 0 0 0 2em;
+	padding: 0px;
+	color: #005F00;
+	text-decoration: none;
+}
+#createbox input, #createbox textarea {
 	border: 1px solid #008000;
 }
-#threads textarea {
+#createbox textarea {
 	-moz-border-radius: 4px;
 }
-#threads input[type=submit] {
+#createbox input[type=submit] {
 	background: #C0E0D0;
 }
 .threadcaptcha {
 	color: #008000;
 }
+
 
 
 #posts {
@@ -151,6 +165,13 @@ ol p:last-child, ul p:last-child {
 	font-weight: bold;
 	margin: 0px 0px 0px 1em;
 	padding: 0px;
+}
+#posts h2 a {
+	color: #CC1105;
+	text-decoration: none;
+}
+#posts h2 a:hover {
+	text-decoration: underline;
 }
 #posts h2 small {
 	font-size: 1em;
@@ -224,7 +245,7 @@ ol p:last-child, ul p:last-child {
 	right: 1.5em;
 	font-size: small;
 }
-#posts img {
+#posts img.thumb, #posts a img {
 	border-width: 1px;
 	float: left;
 	margin: 0.5em 2em 0.5em 3em;
@@ -284,6 +305,32 @@ ol p:last-child, ul p:last-child {
 #footer {
         text-align: center;
         font-size: 0.8em;
+}
+
+
+
+#oldthreadlist {
+	width: 100%;
+	background: #FFFFFF;
+	font-family: serif;
+	padding: 6px;
+	-moz-border-radius: 4px;
+	margin: 0 auto;
+}
+
+#oldthreadlist th {
+	text-align: left;
+}
+
+#oldthreadlist .line0 {
+	background: #FFFFFF;
+}
+#oldthreadlist .line1 {
+	background: #DDDDDD;
+}
+
+#oldthreadlist a {
+	display: block;
 }
 
 
