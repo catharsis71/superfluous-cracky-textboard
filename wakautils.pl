@@ -1,4 +1,4 @@
-# wakautils.pl v8.1
+# wakautils.pl v8.5
 
 use strict;
 
@@ -11,7 +11,7 @@ $has_md5=1 unless $@;
 
 my $has_encode=0;
 eval 'use Encode qw(decode)';
-$has_encode unless $@;
+$has_encode=1 unless $@;
 
 
 use constant MAX_UNICODE => 1114111;
@@ -342,36 +342,61 @@ sub include($)
 	return $file;
 }
 
+
+sub forbidden_unicode($;$)
+{
+	my ($dec,$hex)=@_;
+	return 1 if length($dec)>7 or length($hex)>7; # too long numbers
+	my $ord=($dec or hex $hex);
+
+	return 1 if $ord>MAX_UNICODE; # outside unicode range
+	return 1 if $ord<32; # control chars
+	return 1 if $ord>=0xd800 and $ord<=0xdfff; # surrogate code points
+	return 1 if $ord>=0x202a and $ord<=0x202e; # text direction
+	return 0;
+}
+
 sub clean_string($;$)
 {
-	my ($str,$charset)=@_;
+	my ($str,$cleanentities)=@_;
 
-	$str=decode_string($str,$charset);
+	if($cleanentities) { $str=~s/&/&amp;/g } # clean up &
+	else
+	{
+		$str=~s/&(#([0-9]+);|#x([0-9a-fA-F]+);|)/
+			if($1 eq "") { '&amp;' } # change simple ampersands
+			elsif(forbidden_unicode($2,$3))  { "" } # strip forbidden unicode chars
+			else { "&$1" } # and leave the rest as-is.
+		/ge  # clean up &, excluding numerical entities
+	}
 
-	$str=~s/&(?!#[0-9]+;|#x[0-9a-fA-F]+;)/&amp;/g; # clean up &, excluding numerical entities
 	$str=~s/\</&lt;/g; # clean up brackets for HTML tags
 	$str=~s/\>/&gt;/g;
 	$str=~s/"/&quot;/g; # clean up quotes for HTML attributes
 	$str=~s/'/&#39;/g;
 	$str=~s/,/&#44;/g; # clean up commas for some reason I forgot
 
+	$str=~s/[\x00-\x08\x0b\x0c\x0e-\x1f]//g; # remove control chars
+
 	return $str;
 }
 
-sub decode_string($;$)
+sub decode_string($;$$)
 {
-	my ($str,$charset)=@_;
-	my $use_unicode=$has_encode&&$charset;
+	my ($str,$charset,$noentities)=@_;
+	my $use_unicode=$has_encode && $charset;
 
 	$str=decode($charset,$str) if $use_unicode;
 
-	$str=~s{(&\#([0-9]+);|&#x([0-9a-f]+);)}{
-		my $ord=($2 or hex $3);
-		if($ord>MAX_UNICODE) { "" } # strip entities outside unicode range
+	$str=~s{(&#([0-9]*)([;&])|&#([x&])([0-9a-f]*)([;&]))}{
+		my $ord=($2 or hex $5);
+		if($3 eq '&' or $4 eq '&' or $5 eq '&') { $1 } # nested entities, leave as-is.
+		elsif(forbidden_unicode($2,$5))  { "" } # strip forbidden unicode chars
+		elsif($ord==35 or $ord==38) { $1 } # don't convert & or #
 		elsif($use_unicode) { chr $ord } # if we have unicode support, convert all entities
 		elsif($ord<128) { chr $ord } # otherwise just convert ASCII-range entities
 		else { $1 } # and leave the rest as-is.
-	}gei; # haado!
+	}gei unless $noentities;
 
 	$str=~s/[\x00-\x08\x0b\x0c\x0e-\x1f]//g; # remove control chars
 
@@ -684,7 +709,7 @@ sub process_tripcode($;$$$)
 		my ($namepart,$marker,$trippart)=($1,$2,$3);
 		my $trip;
 
-		$namepart=clean_string($namepart);
+		$namepart=clean_string(decode_string($namepart,$charset));
 
 		if($secret and $trippart=~s/(?:\Q$marker\E)(?<!&#)(?:\Q$marker\E)*(.*)$//) # do we want secure trips, and is there one?
 		{
@@ -700,12 +725,7 @@ sub process_tripcode($;$$$)
 		eval 'use Encode qw(decode encode)';
 		unless($@)
 		{
-			if($charset)
-			{
-				$trippart=decode($charset,$trippart);
-				$trippart=~s/&\#([0-9]+);/chr $1/ge;
-				$trippart=~s/&\#x([0-9a-f]+);/chr hex $1/gei;
-			}
+			$trippart=decode_string($trippart,$charset);
 			$trippart=encode("Shift_JIS",$trippart,0x0200);
 		}
 
@@ -718,7 +738,7 @@ sub process_tripcode($;$$$)
 		return ($namepart,$trip);
 	}
 
-	return (clean_string($name),"");
+	return (clean_string(decode_string($name,$charset)),"");
 }
 
 sub make_date($$;@)
@@ -1001,7 +1021,12 @@ sub spam_check($$) # Deprecated function
 sub compile_spam_checker(@)
 {
 	my @re=map {
-		s/#.*//; s/^\s+//; s/\s+$//; # strip perl-style comments and whitespace
+		s{(\\?\\?&\\?#([0-9]+)\\?;|\\?&\\?#x([0-9a-f]+)\\?;)}{
+			sprintf("\\x{%x}",($2 or hex $3));
+		}gei if $has_encode;
+		$_;
+	} map {
+		s/(^|\s+)#.*//; s/^\s+//; s/\s+$//; # strip perl-style comments and whitespace
 		if(!length) { () } # nothing left, skip
 		elsif(m!^/(.*)/$!) { $1 } # a regular expression
 		elsif(m!^/(.*)/([xism]+)$!) { "(?$2)$1" } # a regular expression with xism modifiers
@@ -1010,9 +1035,46 @@ sub compile_spam_checker(@)
 
 	return eval 'sub {
 		$_=shift;
-		study;
-		return '.(join "||",map "/$re[$_]/o",(0..$#re)).';
+		# study; # causes a strange bug - moved to spam_engine()
+		return '.(join "||",map "/$_/mo",(@re)).';
 	}';
+}
+
+sub spam_engine(%)
+{
+	my %args=@_;
+	my @spam_files=@{$args{spam_files}||[]};
+	my @trap_fields=@{$args{trap_fields}||[]};
+	my %excluded_fields=map ($_=>1),@{$args{excluded_fields}||[]};
+	my $query=$args{query}||new CGI;
+	my $charset=$args{charset};
+
+	for(@trap_fields) { spam_screen($query) if $query->param($_) }
+
+	my $spam_checker=compile_spam_checker(@spam_files);
+	my @fields=$query->param;
+	@fields=grep !$excluded_fields{$_},@fields if %excluded_fields;
+	my $fulltext=join "\n",map decode_string($query->param($_),$charset),@fields;
+	study $fulltext;
+
+	spam_screen($query) if $spam_checker->($fulltext);
+}
+
+sub spam_screen($)
+{
+	my $query=shift;
+
+	print "Content-Type: text/html\n\n";
+	print "<html><body>";
+	print "<h1>Anti-spam filters triggered.</h1>";
+	print "<p>If you are not a spammer, you are probably accidentially ";
+	print "trying to use an URL that is listed in the spam file. Try ";
+	print "editing your post to remove it. Sorry for any inconvenience.</p>";
+	print "<small style='color:white'><small>";
+	print "$_<br>" for(map $query->param($_),$query->param);
+	print "</small></small>";
+
+	exit 0;
 }
 
 
@@ -1142,7 +1204,7 @@ sub make_thumbnail($$$$$;$)
 
 	# try Mac OS X's sips
 
-	`sips -z $width $height -s formatOptions $quality -s format jpeg $filename --out $thumbnail >/dev/null`; # quality setting doesn't seem to work
+	`sips -z $height $width -s formatOptions normal -s format jpeg $filename --out $thumbnail >/dev/null`; # quality setting doesn't seem to work
 	return 1 unless($?);
 
 	# try PerlMagick (it sucks)

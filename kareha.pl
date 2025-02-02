@@ -53,15 +53,6 @@ my $log=lock_log();
 
 if($task eq "post")
 {
-	if(SPAM_TRAP) # Check the hidden fields that exist only so that spam bots will fill them out.
-	{
-		if($query->param("name") or $query->param("link"))
-		{
-			make_http_forward(HTML_SELF,ALTERNATE_REDIRECT);
-			exit 0;
-		}
-	}
-
 	my $thread=$query->param("thread");
 	my $name=$query->param("field_a");
 	my $link=$query->param("field_b");
@@ -334,6 +325,14 @@ sub post_stuff($$$$$$$$$$$$)
 	my $ip=$ENV{REMOTE_ADDR};
 	#$host = gethostbyaddr($ip);
 
+	# spam check
+	spam_engine(
+		query=>$query,
+		trap_fields=>SPAM_TRAP?["name","link"]:[],
+		spam_files=>[SPAM_FILES],
+		charset=>CHARSET,
+	);
+
 	# check captcha
 	if(ENABLE_CAPTCHA)
 	{
@@ -343,13 +342,6 @@ sub post_stuff($$$$$$$$$$$$)
 
 	# proxy check - not implemented yet, and might not ever be
 	#proxy_check($ip) unless($whitelisted);
-
-	# spam check
-	my $spam_checker=compile_spam_checker(SPAM_FILES);
-	make_error(S_SPAM) if $spam_checker->($comment);
-	make_error(S_SPAM) if $spam_checker->($title);
-	make_error(S_SPAM) if $spam_checker->($name);
-	make_error(S_SPAM) if $spam_checker->($link);
 
 	# remember cookies
 	my $c_name=$name;
@@ -490,13 +482,13 @@ sub simple_format($$)
 	{
 		my $line=$_;
 
+		$line=~s!&gt;&gt;($replyrange_re)!\<a href="$ENV{SCRIPT_NAME}/$thread/$1" rel="nofollow"\>&gt;&gt;$1\</a\>!gm;
+
 		# make URLs into links
 		$line=~s{$url_re}{\<a href="$1" rel="nofollow"\>$1\</a\>$2}sgi;
 
-		$line=~s!&gt;&gt;($replyrange_re)!\<a href="$ENV{SCRIPT_NAME}/$thread/$1" rel="nofollow"\>&gt;&gt;$1\</a\>!gm;
-
 		$line;
-	} split /(?:\r\n|\n|\r)/,clean_string($text);
+	} split /(?:\r\n|\n|\r)/,clean_string(decode_string($text));
 }
 
 sub aa_format($$)
@@ -510,7 +502,7 @@ sub wakabamark_format($$)
 {
 	my ($text,$thread)=@_;
 
-	$text=clean_string($text);
+	$text=clean_string(decode_string($text));
 
 	# hide >>1 references from the quoting code
 	$text=~s/&gt;&gt;($replyrange_re)/&gtgt;$1/g;
@@ -522,7 +514,7 @@ sub wakabamark_format($$)
 		return $line;
 	};
 
-	$text=do_wakabamark(decode_string($text),$handler);
+	$text=do_wakabamark($text,$handler);
 
 	# restore >>1 references hidden in code blocks
 	$text=~s/&gtgt;/&gt;&gt;/g;
