@@ -49,25 +49,26 @@ use constant S_FRONT => 'Front page';								# Title of the front page in page l
 #
 
 use constant S_BADCAPTCHA => 'Wrong verification code entered.';			# Error message when the captcha is wrong
-use constant S_UNJUST => 'Unjust POST.';									# Error message on an unjust POST - prevents floodbots or ways not using POST method?
-use constant S_NOTEXT => 'No comment entered.';								# Error message for no text entered in to title/comment
+use constant S_UNJUST => 'Posting must be done through a POST request.';	# Error message on an unjust POST - prevents floodbots or ways not using POST method?
+use constant S_NOTEXT => 'No text entered.';								# Error message for no text entered in to title/comment
 use constant S_NOTITLE => 'No title entered.';								# Error message for no title entered
-use constant S_NOTALLOWED => 'Posting not allowed for non-admins.';			# Error message when the posting type is forbidden for non-admins
-use constant S_TOOLONG => 'Too many characters in text field.';				# Error message for too many characters in a given field
+use constant S_NOTALLOWED => 'Posting not allowed.';						# Error message when the posting type is forbidden for non-admins
+use constant S_TOOLONG => 'The %s field is too long, by %d characters.';	# Error message for too many characters in a given field
 use constant S_UNUSUAL => 'Abnormal reply.';								# Error message for abnormal reply? (this is a mystery!)
 use constant S_SPAM => 'Spammers are not welcome here!';					# Error message when detecting spam
 use constant S_THREADCOLL => 'Somebody else tried to post a thread at the same time. Please try again.';		# If two people create threads during the same second
-use constant S_NOTHREADERR => 'Thread does not exist.';						# Error message when a non-existant thread is accessed
-use constant S_BADDELPASS => 'Incorrect password for deletion.';			# Error message for wrong password (when user tries to delete file)
-use constant S_NOTWRITE => 'Could not write to directory.';					# Error message when the script cannot write to the directory, the chmod (777) is wrong
-use constant S_NOTASK => 'Script error; no task specified.';				# Error message when calling the script incorrectly
-use constant S_NOLOG => 'Could not write to log.txt.';						# Error message when log.txt is not writeable or similar
+use constant S_NOTHREADERR => 'Thread specified does not exist.';			# Error message when a non-existant thread is accessed
+use constant S_BADDELPASS => 'Password incorrect.';							# Error message for wrong password (when user tries to delete file)
+use constant S_NOTWRITE => 'Cannot write to directory.';					# Error message when the script cannot write to the directory, the chmod (777) is wrong
+use constant S_NOTASK => 'Script error; no valid task specified.';			# Error message when calling the script incorrectly
+use constant S_NOLOG => 'Couldn\'t write to log.txt.';						# Error message when log.txt is not writeable or similar
 use constant S_TOOBIG => 'The file you tried to upload is too large.';		# Error message when the image file is larger than MAX_KB
-use constant S_EMPTY => 'The file you tried to upload is empty.';	# Error message when the image file is 0 bytes
-use constant S_BADFORMAT => 'File format not allowed.';			# Returns error when the file is not in a supported format.
+use constant S_EMPTY => 'The file you tried to upload is empty.';			# Error message when the image file is 0 bytes
+use constant S_BADFORMAT => 'File format not allowed.';						# Error message when the file is not in a supported format.
 use constant S_DUPE => 'This file has already been posted <a href="%s">here</a>.';	# Error message when an md5 checksum already exists.
-use constant S_DUPENAME => 'A file with the same name already exists.';	# Error message when an filename already exists.
+use constant S_DUPENAME => 'A file with the same name already exists.';		# Error message when an filename already exists.
 use constant S_THREADCLOSED => 'This thread is closed.';					# Error message when posting in a legen^H^H^H^H^H closed thread
+use constant S_SPAMTRAP => 'Leave empty (spam trap): ';
 
 
 
@@ -105,6 +106,7 @@ form { margin-bottom: 0px }
 
 <script type="text/javascript">var style_cookie="<const STYLE_COOKIE>";</script>
 <script type="text/javascript" src="<const expand_filename(JS_FILE)>"></script>
+<script type="text/javascript">require_script_version("3.a");</script>
 </head>
 <if $thread><body class="replypage"></if>
 <if !$thread><body class="mainpage"></if>
@@ -139,11 +141,11 @@ use constant MAIN_PAGE_TEMPLATE => compile_template(NORMAL_HEAD_INCLUDE.q{
 	<form id="postform" action="<var $self>" method="post" enctype="multipart/form-data">
 
 	<input type="hidden" name="task" value="post" />
-	<if FORCED_ANON><input type="hidden" name="name" /></if>
+	<if FORCED_ANON><input type="hidden" name="field_a" /></if>
 
 	<table><tbody>
-	<if !FORCED_ANON><tr><td class="postblock"><const S_NAME></td><td><input type="text" name="name" size="28" /></td></tr></if>
-	<tr><td class="postblock"><const S_EMAIL></td><td><input type="text" name="link" size="28" /></td></tr>
+	<if !FORCED_ANON><tr><td class="postblock"><const S_NAME></td><td><input type="text" name="field_a" size="28" /></td></tr></if>
+	<tr><td class="postblock"><const S_EMAIL></td><td><input type="text" name="field_b" size="28" /></td></tr>
 	<tr><td class="postblock"><const S_SUBJECT></td><td><input type="text" name="title" size="35" />
 	<input type="submit" value="<const S_SUBMIT>" /></td></tr>
 	<tr><td class="postblock"><const S_COMMENT></td><td><textarea name="comment" cols="48" rows="4"></textarea></td></tr>
@@ -160,10 +162,18 @@ use constant MAIN_PAGE_TEMPLATE => compile_template(NORMAL_HEAD_INCLUDE.q{
 	</if>
 
 	<tr><td class="postblock"><const S_DELPASS></td><td><input type="password" name="password" size="8" /> <const S_DELEXPL></td></tr>
+
+	<if SPAM_TRAP>
+		<tr style="display:none">
+		<td class="postblock"><const S_SPAMTRAP></td>
+		<td><input type="text" name="name" size="10" autocomplete="off" /><input type="text" name="link" size="10" autocomplete="off" /></td>
+		</tr>
+	</if>
+
 	<tr><td colspan="2">
 	<div class="rules">}.include(INCLUDE_DIR."rules.html").q{</div></td></tr>
 	</tbody></table></form></div>
-	<script type="text/javascript">set_inputs("postform")</script>
+	<script type="text/javascript">set_new_inputs("postform")</script>
 </if>
 
 <hr />
@@ -226,11 +236,11 @@ use constant THREAD_HEAD_TEMPLATE => compile_template(NORMAL_HEAD_INCLUDE.q{
 
 	<input type="hidden" name="task" value="post" />
 	<input type="hidden" name="thread" value="<var $thread>" />
-	<if FORCED_ANON><input type="hidden" name="name" /></if>
+	<if FORCED_ANON><input type="hidden" name="field_a" /></if>
 
 	<table><tbody>
-	<if !FORCED_ANON><tr><td class="postblock"><const S_NAME></td><td><input type="text" name="name" size="28" /></td></tr></if>
-	<tr><td class="postblock"><const S_EMAIL></td><td><input type="text" name="link" size="28" /></td></tr>
+	<if !FORCED_ANON><tr><td class="postblock"><const S_NAME></td><td><input type="text" name="field_a" size="28" /></td></tr></if>
+	<tr><td class="postblock"><const S_EMAIL></td><td><input type="text" name="field_b" size="28" /></td></tr>
 	<tr><td class="postblock"><const S_SUBJECT></td><td><input type="text" name="title" size="35" />
 	<input type="submit" value="<const S_SUBMIT>" /></td></tr>
 	<tr><td class="postblock"><const S_COMMENT></td><td><textarea name="comment" cols="48" rows="4"></textarea></td></tr>
@@ -246,10 +256,18 @@ use constant THREAD_HEAD_TEMPLATE => compile_template(NORMAL_HEAD_INCLUDE.q{
 	</if>
 
 	<tr><td class="postblock"><const S_DELPASS></td><td><input type="password" name="password" size="8" /> <const S_DELEXPL></td></tr>
+
+	<if SPAM_TRAP>
+		<tr style="display:none">
+		<td class="postblock"><const S_SPAMTRAP></td>
+		<td><input type="text" name="name" size="10" autocomplete="off" /><input type="text" name="link" size="10" autocomplete="off" /></td>
+		</tr>
+	</if>
+
 	<tr><td colspan="2">
 	<div class="rules">}.include(INCLUDE_DIR."rules.html").q{</div></td></tr>
 	</tbody></table></form></div>
-	<script type="text/javascript">set_inputs("postform")</script>
+	<script type="text/javascript">set_new_inputs("postform")</script>
 </if>
 
 <hr />

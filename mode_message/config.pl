@@ -86,10 +86,12 @@
 #use constant ENABLE_DELETION => 1;				# Enable user deletion of posts. (0: no, 1: yes)
 #use constant PAGE_GENERATION => 'single';		# Page generation method ('single': just one page, 'paged': split into several pages like futaba, 'monthly': separate pages for each month)
 #use constant DELETE_FIRST => 'single';			# What to do when the first post is deleted ('keep': keep the thread, 'single': delete the thread if there is only one post, 'remove': delete the whole thread)
-#use constant DEFAULT_MARKUP => 'waka';			# Default markup type ('none', 'waka', 'html', 'aa)
+#use constant MARKUP_FORMATS => ('none','waka','html','aa'); # Lists the markup formats to support, as a Perl list. Supported: 'none', 'waka', 'html', 'aa'.
+#use constant DEFAULT_MARKUP => 'waka';			# Default markup format, of the above.
 #use constant FUDGE_BLOCKQUOTES => 0;			# Modify formatting for old stylesheets
 #use constant USE_XHTML => 1;					# Send pages as application/xhtml+xml to browsers that support this (0:no, 1:yes)
 #use constant KEEP_MAINPAGE_NEWLINES => 0;		# Don't strip whitespace from main page (needed for Google ads to work, 0:no, 1:yes)
+#use constant SPAM_TRAP => 1;					# Enable the spam trap (empty, hidden form fields that spam bots usually fill out) (0:no, 1:yes)
 
 # Internal paths and files - might as well leave this alone.
 #use constant RES_DIR => 'res/';				# Reply cache directory (needs to be writeable by the script)
@@ -103,7 +105,23 @@
 #use constant HTML_BACKLOG => 'subback.html';	# Name of backlog html file
 #use constant RSS_FILE => 'index.rss';			# RSS file. Set to '' to disable RSS support.
 #use constant JS_FILE => 'kareha.js';			# Location of the js file
-#use constant SPAM_FILE => 'spam.txt';			# Spam definitions. Hint: set all boards to use the same file for easy updating.
+#use constant SPAM_FILES => ('spam.txt');		# Spam definition files, as a Perl list.
+												# Hints: * Set all boards to use the same file for easy updating.
+												#        * Set up two files, one being the official list from
+												#          http://wakaba.c3.cx/antispam/spam.txt, and one your own additions.
+
+# Admin script options
+#use constant ADMIN_SHOWN_LINES => 5;				# Number of post lines the admin script shows.
+#use constant ADMIN_SHOWN_POSTS => 10;				# Number of posts per thread the admin script shows.
+#use constant ADMIN_MASK_IPS => 0;					# Mask poster IP addresses in the admin script (0: no, 1: yes)
+#use constant ADMIN_EDITABLE_FILES => (SPAM_FILES); # A Perl list of all files that can be edited from the admin script.
+                                                    # Hints: * If you don't trust your moderators, don't let them edit templates!
+                                                    #          Templates can execute code on your server!
+                                                    #        * If you still want to allow editing of templates, use
+                                                    #          (SPAM_FILES,glob("include/*")) as a convenient shorthand.
+#use constant ADMIN_BAN_FILE => '.htaccess';		# Name of the file to write bans to
+#use constant ADMIN_BAN_TEMPLATE => "\n# Banned at <var scalar localtime> (<var \$reason>)\nDeny from <var \$ip>\n";
+													# Format of the ban entries, using the template syntax.
 
 # Icons for filetypes - file extensions specified here will not be renamed, and will get icons
 # (except for the built-in image formats). These example icons can be found in the extras/ directory.
@@ -139,6 +157,16 @@
 #	gif => '.',
 #	jpg => '.',
 #	png => '.',
+#);
+
+# Allowed HTML tags and attributes. Sort of undocumented for now, but feel free to
+# learn by example.
+#use constant ALLOWED_HTML => (
+#	'a'=>{args=>{'href'=>'url'},forced=>{'rel'=>'nofollow'}},
+#	'b'=>{},'i'=>{},'u'=>{},'sub'=>{},'sup'=>{},
+#	'em'=>{},'strong'=>{},
+#	'ul'=>{},'ol'=>{},'li'=>{},'dl'=>{},'dt'=>{},'dd'=>{},
+#	'p'=>{},'br'=>{empty=>1},'blockquote'=>{},
 #);
 
 1;

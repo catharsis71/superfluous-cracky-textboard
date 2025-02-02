@@ -1,47 +1,6 @@
-function get_cookie(name)
+function require_script_version(v)
 {
-	with(document.cookie)
-	{
-		var regexp=new RegExp("(^|;\\s+)"+name+"=(.*?)(;|$)");
-		var hit=regexp.exec(document.cookie);
-		if(hit&&hit.length>2) return unescape(hit[2]);
-		else return '';
-	}
-};
-
-function set_cookie(name,value,days)
-{
-	if(days)
-	{
-		var date=new Date();
-		date.setTime(date.getTime()+(days*24*60*60*1000));
-		var expires="; expires="+date.toGMTString();
-	}
-	else expires="";
-	document.cookie=name+"="+value+expires+"; path=/";
-}
-
-
-
-function make_password()
-{
-	var chars="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-	var pass='';
-
-	for(var i=0;i<8;i++)
-	{
-		var rnd=Math.floor(Math.random()*chars.length);
-		pass+=chars.substring(rnd,rnd+1);
-	}
-
-	return(pass);
-}
-
-function get_password(name)
-{
-	var pass=get_cookie(name);
-	if(pass) return pass;
-	return make_password();
+	if(v!="3.a") alert("The board has been upgraded. You need to force a reload in your browser to complete the update.\nThis is usually done by holding down Shift and pressing the reload button.");
 }
 
 
@@ -106,7 +65,126 @@ function delete_post(thread,post,file)
 	}
 }
 
+function preview_post(formid,thread)
+{
+	var form=document.getElementById(formid);
+	var preview=document.getElementById("preview"+thread);
 
+	if(!form||!preview) return;
+
+	preview.style.display="";
+	preview.innerHTML="<em>Loading...</em>";
+
+	var text;
+	text="task=preview";
+	text+="&comment="+encodeURIComponent(form.comment.value);
+	text+="&markup="+encodeURIComponent(form.markup.value);
+	if(thread) text+="&thread="+thread;
+
+	var xmlhttp=get_xmlhttp();
+	xmlhttp.open("POST",self);
+	xmlhttp.onreadystatechange=function() {
+		if(xmlhttp.readyState==4) preview.innerHTML=xmlhttp.responseText;
+	}
+	if(is_ie()||xmlhttp.setRequestHeader) xmlhttp.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+	xmlhttp.send(text);
+}
+
+function get_xmlhttp()
+{
+	var xmlhttp;
+	try { xmlhttp=new ActiveXObject("Msxml2.XMLHTTP"); }
+	catch(e1)
+	{
+		try { xmlhttp=new ActiveXObject("Microsoft.XMLHTTP"); }
+		catch(e1) { xmlhttp=null; }
+	}
+
+	if(!xmlhttp && typeof XMLHttpRequest!='undefined') xmlhttp=new XMLHttpRequest();
+
+	return(xmlhttp);
+}
+
+function is_ie()
+{
+	return(document.all&&!document.opera);
+}
+
+
+
+function set_new_inputs(id)
+{
+	var el=document.getElementById(id);
+
+	if(!el||!el.link) return;
+
+	if(!el.field_a.value) el.field_a.value=get_cookie("name");
+	if(!el.field_b.value) el.field_b.value=get_cookie("link");
+	if(!el.password.value) el.password.value=get_password("password");
+	if(el.markup&&!el.comment.value) el.markup.value=get_cookie("markup");
+	select_markup(el.markup);
+}
+
+function set_delpass(id)
+{
+	with(document.getElementById(id)) password.value=get_cookie("password");
+}
+
+function make_password()
+{
+	var chars="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+	var pass='';
+
+	for(var i=0;i<8;i++)
+	{
+		var rnd=Math.floor(Math.random()*chars.length);
+		pass+=chars.substring(rnd,rnd+1);
+	}
+
+	return(pass);
+}
+
+function get_password(name)
+{
+	var pass=get_cookie(name);
+	if(pass) return pass;
+	return make_password();
+}
+
+function select_markup(sel)
+{
+	if(!window.markup_descriptions) return;
+
+	var el=sel;
+	while(el=el.nextSibling) if(el.nodeName.toLowerCase()=="small") break;
+
+	if(el) el.innerHTML=markup_descriptions[sel.value];
+}
+
+
+
+function get_cookie(name)
+{
+	with(document.cookie)
+	{
+		var regexp=new RegExp("(^|;\\s+)"+name+"=(.*?)(;|$)");
+		var hit=regexp.exec(document.cookie);
+		if(hit&&hit.length>2) return unescape(hit[2]);
+		else return '';
+	}
+};
+
+function set_cookie(name,value,days)
+{
+	if(days)
+	{
+		var date=new Date();
+		date.setTime(date.getTime()+(days*24*60*60*1000));
+		var expires="; expires="+date.toGMTString();
+	}
+	else expires="";
+	document.cookie=name+"="+value+expires+"; path=/";
+}
 
 function set_stylesheet(styletitle)
 {
@@ -159,33 +237,7 @@ function get_preferred_stylesheet()
 	return null;
 }
 
-function set_inputs(id)
-{
-	var el=document.getElementById(id);
 
-	if(!el||!el.link) return;
-
-	if(!el.name.value) el.name.value=get_cookie("name");
-	if(!el.link.value) el.link.value=get_cookie("link");
-	if(!el.password.value) el.password.value=get_password("password");
-	if(el.markup&&!el.comment.value) el.markup.value=get_cookie("markup");
-	select_markup(el.markup);
-}
-
-function set_delpass(id)
-{
-	with(document.getElementById(id)) password.value=get_cookie("password");
-}
-
-function select_markup(sel)
-{
-	if(!window.markup_descriptions) return;
-
-	var el=sel;
-	while(el=el.nextSibling) if(el.nodeName.toLowerCase()=="small") break;
-
-	if(el) el.innerHTML=markup_descriptions[sel.value];
-}
 
 window.onunload=function(e)
 {

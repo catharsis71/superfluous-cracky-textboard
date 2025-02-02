@@ -12,7 +12,7 @@ body {
 body.mainpage {
 	background: #C5AD99;
 	background-image: url(../img/ba.gif);
-	color: #000000;
+	color: #000080;
 }
 body.threadpage {
 	background: #EFEFEF;
@@ -95,7 +95,7 @@ ol p:last-child, ul p:last-child {
 	margin: 0em 0em 0.5em 0.3em;
 }
 .threadcaptcha {
-	color: #000000;
+	color: #000080;
 }
 
 
@@ -277,17 +277,24 @@ body.backlogpage #threadlist {
 	margin-left: 0.3em;
 }
 #posts h3 .replynum a {
-	color: #000000;
+	color: #000080;
 	text-decoration: none;
 }
 #posts h3 .replynum a:hover {
-        color:#DD0000;
+	color:#DD0000;
 }
-#posts h3 .postername {
+.mainpage #posts h3 .postername {
+	color: red;
+	font-weight: bold;
+}
+.mainpage #posts h3 .postertrip {
+	color: red;
+}
+.threadpage #posts h3 .postername {
 	color: green;
 	font-weight: bold;
 }
-#posts h3 .postertrip {
+.threadpage #posts h3 .postertrip {
 	color: green;
 }
 #posts .deletebutton {
@@ -325,7 +332,7 @@ body.backlogpage #threadlist {
 }
 .replytext em { font-style: normal; }
 #posts .replyabbrev {
-	color: green;
+	color: red;
 	margin-left: 3em;
 	margin-bottom: 0.5em;
 }
@@ -337,7 +344,7 @@ body.backlogpage #threadlist {
 	margin: 0;
 }
 #posts form small a {
-	color: #000000;
+	color: #000080;
 	text-decoration: none;
 }
 #posts form small a:hover {
@@ -361,7 +368,7 @@ body.backlogpage #threadlist {
 	background: #EFEFEF;
 }
 .postcaptcha {
-	color: #000000;
+	color: #000080;
 }
 
 h4 {

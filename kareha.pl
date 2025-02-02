@@ -23,12 +23,14 @@ return 1 if(caller);
 # Global init
 #
 
-my $replyrange_re=qr/n?(?:[0-9\-,lrq]|&#44;)*[0-9\-lrq]/; # regexp to match reply ranges for >> links
-my $protocol_re=qr/(?:http|https|ftp|mailto|news|irc)/;
-
-no strict;
-$stylesheets=get_stylesheets(); # make stylesheets visible to the templates
+no strict; # disable strictness to create global variables visible to the templates
+$stylesheets=get_stylesheets();
+$markup_formats=[map +{id=>$_},MARKUP_FORMATS];
 use strict;
+
+my $replyrange_re=qr{n?(?:[0-9\-,lrq]|&#44;)*[0-9\-lrq]}; # regexp to match reply ranges for >> links
+my $protocol_re=protocol_regexp();
+my $url_re=url_regexp();
 
 my $query=new CGI;
 my $task=$query->param("task");
@@ -51,9 +53,18 @@ my $log=lock_log();
 
 if($task eq "post")
 {
+	if(SPAM_TRAP) # Check the hidden fields that exist only so that spam bots will fill them out.
+	{
+		if($query->param("name") or $query->param("link"))
+		{
+			make_http_forward(HTML_SELF,ALTERNATE_REDIRECT);
+			exit 0;
+		}
+	}
+
 	my $thread=$query->param("thread");
-	my $name=$query->param("name");
-	my $link=$query->param("link");
+	my $name=$query->param("field_a");
+	my $link=$query->param("field_b");
 	my $title=$query->param("title");
 	my $comment=$query->param("comment");
 	my $captcha=$query->param("captcha");
@@ -64,6 +75,15 @@ if($task eq "post")
 	my $key=$query->cookie("captchakey");
 
 	post_stuff($thread,$name,$link,$title,$comment,$captcha,$key,$password,$markup,$savemarkup,$file,$file);
+}
+elsif($task eq "preview")
+{
+	my $comment=$query->param("comment");
+	my $markup=$query->param("markup");
+	my $thread=$query->param("thread");
+
+	preview_post($comment,$markup,$thread);
+	exit;
 }
 elsif($task eq "delete")
 {
@@ -291,24 +311,25 @@ sub post_stuff($$$$$$$$$$$$)
 	my $time=time();
 
 	# check that the request came in as a POST, or from the command line
-	make_error(S_UNJUST) if($ENV{REQUEST_METHOD} and $ENV{REQUEST_METHOD} ne "POST");
+	make_error(S_UNJUST) if $ENV{REQUEST_METHOD} and $ENV{REQUEST_METHOD} ne "POST";
 
 	# check for weird characters
-	make_error(S_UNUSUAL) if($thread=~/[^0-9]/);
-	make_error(S_UNUSUAL) if(length($thread)>10);
-	make_error(S_UNUSUAL) if($name=~/[\n\r]/);
-	make_error(S_UNUSUAL) if($link=~/[\n\r]/);
-	make_error(S_UNUSUAL) if($title=~/[\n\r]/);
+	make_error(S_UNUSUAL) if $thread=~/[^0-9]/;
+	make_error(S_UNUSUAL) if length($thread)>10;
+	make_error(S_UNUSUAL) if $name=~/[\n\r]/;
+	make_error(S_UNUSUAL) if $link=~/[\n\r]/;
+	make_error(S_UNUSUAL) if $title=~/[\n\r]/;
+	make_error(S_UNUSUAL) if $markup and !grep $markup eq $_,MARKUP_FORMATS;
 
 	# check for excessive amounts of text
-	make_error(S_TOOLONG) if(length($name)>MAX_FIELD_LENGTH);
-	make_error(S_TOOLONG) if(length($link)>MAX_FIELD_LENGTH);
-	make_error(S_TOOLONG) if(length($title)>MAX_FIELD_LENGTH);
-	make_error(S_TOOLONG) if(length($comment)>MAX_COMMENT_LENGTH);
+	make_error(sprintf(S_TOOLONG,"name",length($name)-&MAX_FIELD_LENGTH)) if length($name)>MAX_FIELD_LENGTH;
+	make_error(sprintf(S_TOOLONG,"link",length($link)-&MAX_FIELD_LENGTH)) if length($link)>MAX_FIELD_LENGTH;
+	make_error(sprintf(S_TOOLONG,"title",length($title)-&MAX_FIELD_LENGTH)) if length($title)>MAX_FIELD_LENGTH;
+	make_error(sprintf(S_TOOLONG,"comment",length($comment)-&MAX_COMMENT_LENGTH)) if length($comment)>MAX_COMMENT_LENGTH;
 
 	# check for empty post
-	make_error(S_NOTEXT) if($comment=~/^\s*$/ and !$file);
-	make_error(S_NOTITLE) if(REQUIRE_THREAD_TITLE and $title=~/^\s*$/ and !$thread);
+	make_error(S_NOTEXT) if $comment=~/^\s*$/ and !$file;
+	make_error(S_NOTITLE) if REQUIRE_THREAD_TITLE and $title=~/^\s*$/ and !$thread;
 
 	# find hostname
 	my $ip=$ENV{REMOTE_ADDR};
@@ -317,18 +338,19 @@ sub post_stuff($$$$$$$$$$$$)
 	# check captcha
 	if(ENABLE_CAPTCHA)
 	{
-		make_error(S_BADCAPTCHA) if(find_key($log,$key));
-		make_error(S_BADCAPTCHA) if(!check_captcha($key,$captcha));
+		make_error(S_BADCAPTCHA) if find_key($log,$key);
+		make_error(S_BADCAPTCHA) if !check_captcha($key,$captcha);
 	}
 
 	# proxy check - not implemented yet, and might not ever be
 	#proxy_check($ip) unless($whitelisted);
 
 	# spam check
-	make_error(S_SPAM) if(spam_check($comment,SPAM_FILE));
-	make_error(S_SPAM) if(spam_check($title,SPAM_FILE));
-	make_error(S_SPAM) if(spam_check($name,SPAM_FILE));
-	make_error(S_SPAM) if(spam_check($link,SPAM_FILE));
+	my $spam_checker=compile_spam_checker(SPAM_FILES);
+	make_error(S_SPAM) if $spam_checker->($comment);
+	make_error(S_SPAM) if $spam_checker->($title);
+	make_error(S_SPAM) if $spam_checker->($name);
+	make_error(S_SPAM) if $spam_checker->($link);
 
 	# remember cookies
 	my $c_name=$name;
@@ -349,7 +371,7 @@ sub post_stuff($$$$$$$$$$$$)
 	$title=clean_string($title);
 
 	# fix up the link
-	$link="mailto:$link" if($link and $link!~/^$protocol_re:/);
+	$link="mailto:$link" if $link and $link!~/^$protocol_re/;
 
 	# process the tripcode
 	my ($trip,$capped);
@@ -358,10 +380,10 @@ sub post_stuff($$$$$$$$$$$$)
 	$capped=$capped_trips{$trip};
 
 	# insert anonymous name if none entered
-	$name=make_anonymous($ip,$time,($thread or $time)) unless($name or $trip);
+	$name=make_anonymous($ip,$time,($thread or $time)) unless $name or $trip;
 
 	# reveal host when name is "fusianasan"
-	($name,$trip)=("",resolve_host($ENV{REMOTE_ADDR}).$trip) if($name=~/fusianasan/i);
+	($name,$trip)=("",resolve_host($ENV{REMOTE_ADDR}).$trip) if $name=~/fusianasan/i;
 
 	# check for posting limitations
 	unless($capped)
@@ -382,7 +404,7 @@ sub post_stuff($$$$$$$$$$$$)
 	my ($filename,$ext,$size,$md5,$width,$height,$thumbnail,$tn_width,$tn_height)=process_file($file,$uploadname,$time) if($file);
 
 	# create the thread if we are starting a new one
-	$thread=make_thread($title,$time,$name.$trip) unless($thread);
+	$thread=make_thread($title,$time,$name.$trip) unless $thread;
 
 	# format the comment
 	$comment=format_comment($comment,$markup,$thread);
@@ -391,7 +413,7 @@ sub post_stuff($$$$$$$$$$$$)
 	my $date=make_date($time,DATE_STYLE);
 
 	# generate ID code if enabled
-	$date.=' ID:'.make_id_code($ip,$time,$link,$thread) if(DISPLAY_ID);
+	$date.=' ID:'.make_id_code($ip,$time,$link,$thread) if DISPLAY_ID;
 
 	# add the reply to the thread
 	my $num=make_reply(
@@ -413,6 +435,23 @@ sub post_stuff($$$$$$$$$$$$)
 	make_cookies(name=>$c_name,link=>$c_link,password=>$c_password,
 	$savemarkup?(markup=>$c_markup):(),
 	captchakey=>make_random_string(8),-charset=>CHARSET,-autopath=>COOKIE_PATH); # yum!
+}
+
+sub preview_post($$$)
+{
+	my ($comment,$markup,$thread)=@_;
+
+	$thread=time() unless $thread;
+
+	make_error(S_UNUSUAL) unless grep $markup eq $_,MARKUP_FORMATS;
+	make_error(sprintf(S_TOOLONG,"comment",length($comment)-&MAX_COMMENT_LENGTH)) if length($comment)>MAX_COMMENT_LENGTH;
+
+	# format the comment
+	$comment=format_comment($comment,$markup,$thread);
+
+	print "Content-Type: text/html\n";
+	print "\n";
+	print $comment;
 }
 
 sub proxy_check($)
@@ -453,7 +492,7 @@ sub simple_format($$)
 		my $line=$_;
 
 		# make URLs into links
-		$line=~s{($protocol_re://[^\s<>"]*?)((?:\s|<|>|"|\.|\)|\]|!|\?|,|&#44;|&quot;)*(?:[\s<>"]|$))}{\<a href="$1" rel="nofollow"\>$1\</a\>$2}sgi;
+		$line=~s{$url_re}{\<a href="$1" rel="nofollow"\>$1\</a\>$2}sgi;
 
 		$line=~s!&gt;&gt;($replyrange_re)!\<a href="$ENV{SCRIPT_NAME}/$thread/$1" rel="nofollow"\>&gt;&gt;$1\</a\>!gm;
 
@@ -484,7 +523,7 @@ sub wakabamark_format($$)
 		return $line;
 	};
 
-	$text=do_wakabamark($text,$handler);
+	$text=do_wakabamark(decode_string($text),$handler);
 
 	# restore >>1 references hidden in code blocks
 	$text=~s/&gtgt;/&gt;&gt;/g;
@@ -496,7 +535,7 @@ sub html_format($$)
 {
 	my ($text,$thread)=@_;
 
-	$text=sanitize_html($text,ALLOWED_HTML);
+	$text=sanitize_html(decode_string($text),ALLOWED_HTML);
 
 	$text=~s!&gt;&gt;($replyrange_re)!\<a href="$ENV{SCRIPT_NAME}/$thread/$1" rel="nofollow"\>&gt;&gt;$1\</a\>!gm;
 	$text=~s!(?:\r\n|\n|\r)!<br />!sg;
@@ -630,9 +669,9 @@ sub trim_threads()
 
 	foreach my $thread (@threads)
 	{
-		close_thread($$thread{thread}) if(AUTOCLOSE_POSTS and $$thread{postcount}>=AUTOCLOSE_POSTS);
-		close_thread($$thread{thread}) if(AUTOCLOSE_DAYS and (time()-$$thread{lastmod})>=AUTOCLOSE_DAYS*86400);
-		close_thread($$thread{thread}) if(AUTOCLOSE_SIZE and $$thread{size}>=AUTOCLOSE_SIZE*1024);
+		close_thread($$thread{thread},1) if(AUTOCLOSE_POSTS and $$thread{postcount}>=AUTOCLOSE_POSTS);
+		close_thread($$thread{thread},1) if(AUTOCLOSE_DAYS and (time()-$$thread{lastmod})>=AUTOCLOSE_DAYS*86400);
+		close_thread($$thread{thread},1) if(AUTOCLOSE_SIZE and $$thread{size}>=AUTOCLOSE_SIZE*1024);
 	}
 }
 
@@ -868,7 +907,8 @@ sub filter_post_ranges($$;$)
 			OUTER: foreach my $post (1..$total)
 			{
 				next if $post eq $num;
-				while(get_reply_text($post)=~/&gt;&gt;($replyrange_re)/g)
+				my $text=get_post_text($thread,$post);
+				while($text=~/&gt;&gt;($replyrange_re)/g)
 				{
 					if(in_range($num,$1)) { push @postnums,$post; next OUTER; }
 				}

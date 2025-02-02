@@ -51,7 +51,7 @@ BEGIN {
 	eval "use constant THUMBNAIL_QUALITY => 70" unless(defined &THUMBNAIL_QUALITY);
 	eval "use constant ALLOW_UNKNOWN => 0" unless(defined &ALLOW_UNKNOWN);
 	eval "use constant MUNGE_UNKNOWN => '.unknown'" unless(defined &MUNGE_UNKNOWN);
-	eval "use constant FORBIDDEN_EXTENSIONS => ('php','php3','php4','phtml','shtml','cgi','pl','pm','py','r','exe','dll','scr','pif','asp','cfm','jsp','vbs')" unless(defined &FORBIDDEN_EXTENSIONS);
+	eval "use constant FORBIDDEN_EXTENSIONS => ('php','php3','php4','phtml','shtml','cgi','pl','pm','py','r','exe','dll','scr','pif','asp','cfm','jsp','vbs','rb')" unless(defined &FORBIDDEN_EXTENSIONS);
 	eval "use constant STUPID_THUMBNAILING => 0" unless(defined &STUPID_THUMBNAILING);
 	eval "use constant MAX_IMAGE_WIDTH => 16384" unless(defined &MAX_IMAGE_WIDTH);
 	eval "use constant MAX_IMAGE_HEIGHT => 16384" unless(defined &MAX_IMAGE_HEIGHT);
@@ -84,10 +84,12 @@ BEGIN {
 	eval "use constant ENABLE_DELETION => 1" unless(defined &ENABLE_DELETION);
 	eval "use constant PAGE_GENERATION => 'single'" unless(defined &PAGE_GENERATION);
 	eval "use constant DELETE_FIRST => 'single'" unless(defined &DELETE_FIRST);
+	eval "use constant MARKUP_FORMATS => ('none','waka','html','aa')" unless(defined &MARKUP_FORMATS);
 	eval "use constant DEFAULT_MARKUP => 'waka'" unless(defined &DEFAULT_MARKUP);
 	eval "use constant FUDGE_BLOCKQUOTES => 0" unless(defined &FUDGE_BLOCKQUOTES);
 	eval "use constant USE_XHTML => 1" unless(defined &USE_XHTML);
 	eval "use constant KEEP_MAINPAGE_NEWLINES => 0" unless(defined &KEEP_MAINPAGE_NEWLINES);
+	eval "use constant SPAM_TRAP => 1" unless(defined &SPAM_TRAP);
 
 	# Internal paths and files - might as well leave this alone.
 	eval "use constant RES_DIR => 'res/'" unless(defined &RES_DIR);
@@ -101,19 +103,33 @@ BEGIN {
 	eval "use constant HTML_BACKLOG => 'subback.html'" unless(defined &HTML_BACKLOG);
 	eval "use constant RSS_FILE => 'index.rss'" unless(defined &RSS_FILE);
 	eval "use constant JS_FILE => 'kareha.js'" unless(defined &JS_FILE);
-	eval "use constant SPAM_FILE => 'spam.txt'" unless(defined &SPAM_FILE);
 
+	unless(defined &SPAM_FILES)
+	{
+		if(defined &SPAM_FILE) { eval "use constant SPAM_FILES => (SPAM_FILE)" }
+		else { eval "use constant SPAM_FILES => ('spam.txt')" }
+	}
+#	eval "use constant SPAM_FILE => 'spam.txt'" unless(defined &SPAM_FILE);
+
+	# Admin script options
+	eval "use constant ADMIN_SHOWN_LINES => 5" unless(defined &ADMIN_SHOWN_LINES);
+	eval "use constant ADMIN_SHOWN_POSTS => 10" unless(defined &ADMIN_SHOWN_POSTS);
+	eval "use constant ADMIN_MASK_IPS => 0" unless(defined &ADMIN_MASK_IPS);
+	eval "use constant ADMIN_EDITABLE_FILES => (SPAM_FILES)" unless(defined &ADMIN_EDITABLE_FILES);
+	eval "use constant ADMIN_BAN_FILE => '.htaccess'" unless(defined &ADMIN_BAN_FILE);
+	eval 'use constant ADMIN_BAN_TEMPLATE => "\n# Banned at <var scalar localtime> (<var \$reason>)\nDeny from <var \$ip>\n"' unless(defined &ADMIN_BAN_TEMPLATE);
+
+	# Big lists of stuff
 	eval "use constant FILETYPES => ()" unless(defined &FILETYPES);
-
 	eval q{use constant ALLOWED_HTML => (
-		'a'=>{args=>{'href'=>'url'}},
+		'a'=>{args=>{'href'=>'url'},forced=>{'rel'=>'nofollow'}},
 		'b'=>{},'i'=>{},'u'=>{},'sub'=>{},'sup'=>{},
 		'em'=>{},'strong'=>{},
 		'ul'=>{},'ol'=>{},'li'=>{},'dl'=>{},'dt'=>{},'dd'=>{},
 		'p'=>{},'br'=>{empty=>1},'blockquote'=>{},
 	)} unless(defined &ALLOWED_HTML);
 
-	eval "use constant KAREHA_VERSION => '3.0.9'" unless(defined &KAREHA_VERSION);
+	eval "use constant KAREHA_VERSION => '3.1.0'" unless(defined &KAREHA_VERSION);
 }
 
 1;

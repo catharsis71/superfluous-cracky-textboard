@@ -1,6 +1,6 @@
 use strict;
 
-BEGIN { require 'wakautils.pl'; }
+BEGIN { require 'wakautils.pl' }
 
 
 
@@ -44,19 +44,18 @@ use constant S_DELETE => '削除';
 use constant S_USERDELETE => '投稿者が削除しました。';
 use constant S_MODDELETE => 'あぼーん';
 use constant S_CLOSEDTHREAD => 'This thread has been closed. You can not post in this thread any longer.';
+use constant S_SPAMTRAP => 'Leave these fields empty (spam trap): ';
 
 use constant S_MOREOPTS => "More options...";
 use constant S_FORMATTING => "Formatting:";
 use constant S_SAVE_FORMATTING => "Always use this formatting";
-use constant S_FORMAT_NONE => "None";
-use constant S_FORMAT_WAKA => "WakabaMark";
-use constant S_FORMAT_HTML => "HTML";
-use constant S_FORMAT_RAW => "Raw HTML";
-use constant S_FORMAT_AA => "Text Art";
-use constant S_DESCRIBE_NONE => 'Only auto-links URLs and >> references.';
-use constant S_DESCRIBE_WAKA => 'Simple text formatting. See the description <a href="http://wakaba.c3.cx/docs/docs.html#WakabaMark">here</a>.';
-use constant S_DESCRIBE_HTML => 'Allowed tags: <em>'.describe_allowed(ALLOWED_HTML).'</em>.';
-use constant S_DESCRIBE_AA => 'Only auto-links URLs and >> references, and sets the font to be suitable for SJIS art.';
+use constant S_FORMATS => {none=>"None",waka=>"WakabaMark",html=>"HTML",raw=>"Raw HTML",aa=>"Text Art"};
+use constant S_DESCRIBE_FORMATS => {
+	none=>'Only auto-links URLs and >> references.',
+	waka=>'Simple text formatting. See the description <a href="http://wakaba.c3.cx/docs/docs.html#WakabaMark">here</a>.',
+	html=>'Allowed tags: <em>'.describe_allowed(ALLOWED_HTML).'</em>.',
+	aa=>'Only auto-links URLs and >> references, and sets the font to be suitable for SJIS art.',
+};
 
 use constant S_COL_NUM => "Num";
 use constant S_COL_TITLE => "Title";
@@ -79,7 +78,6 @@ use constant S_NOTEXT => '何か書いて下さい';
 use constant S_NOTITLE => 'タイトルを書いてください';
 use constant S_NOTALLOWED => '管理人以外は投稿できません';
 use constant S_TOOLONG => '本文が長すぎますっ！';
-use constant S_TOOMANYLINES => '改行が大すぎですっ！';
 use constant S_UNUSUAL => '何か変です';
 use constant S_SPAM => 'スパムを投稿しないで下さい';
 use constant S_THREADCOLL => '誰かが同時に投稿しようとしました。もう一度投稿してください';
@@ -95,8 +93,7 @@ use constant S_DUPE => 'アップロードに失敗しました<br />同じ画像があります (<a h
 use constant S_DUPENAME => 'Error: A file with the same name already exists.';
 use constant S_THREADCLOSED => 'This thread is closed.';
 
-#use constant S_NOADMIN => 'ADMIN_PASS は空にできません';
-#use constant S_NOSECRET => 'SECRET は空にできません';
+
 
 #
 # Templates
@@ -120,16 +117,14 @@ use constant GLOBAL_HEAD_INCLUDE => q{
 </loop>
 
 <script type="text/javascript">
+var self="<var $self>";
 var style_cookie="<const STYLE_COOKIE>";
-var markup_descriptions=
-{
-	none: <const js_string(S_DESCRIBE_NONE)>,
-	waka: <const js_string(S_DESCRIBE_WAKA)>,
-	html: <const js_string(S_DESCRIBE_HTML)>,
-	aa: <const js_string(S_DESCRIBE_AA)>
+var markup_descriptions={
+<loop $markup_formats><var $id>:<var js_string(S_DESCRIBE_FORMATS-\>{$id})>,</loop>dummy:''
 };
 </script>
 <script type="text/javascript" src="<const expand_filename(JS_FILE)>"></script>
+<script type="text/javascript">require_script_version("3.a");</script>
 </head>
 };
 
@@ -145,7 +140,7 @@ use constant POSTING_FORM_TEMPLATE => compile_template(q{
 <if !$thread><tr>
 	<td><const S_TITLE></td>
 	<td>
-		<input type="text" name="title" size="46" />
+		<input type="text" name="title" size="46" maxlength="<const MAX_FIELD_LENGTH>" />
 		<input type="submit" value="<const S_NEWTHREAD>" />
 	</td>
 </tr></if>
@@ -155,10 +150,11 @@ use constant POSTING_FORM_TEMPLATE => compile_template(q{
 		<if !FORCED_ANON><const S_NAME></if>
 		<if FORCED_ANON><const S_LINK></if>
 	</td><td>
-		<if !FORCED_ANON><input type="text" name="name" size="19" /> <const S_LINK> </if>
-		<if FORCED_ANON><input type="hidden" name="name" /></if>
- 		<input type="text" name="link" size="19" />
+		<if !FORCED_ANON><input type="text" name="field_a" size="19" maxlength="<const MAX_FIELD_LENGTH>" /> <const S_LINK> </if>
+		<if FORCED_ANON><input type="hidden" name="field_a" /></if>
+ 		<input type="text" name="field_b" size="19" maxlength="<const MAX_FIELD_LENGTH>" />
 		<if $thread><input type="submit" value="<const S_REPLY>" /></if>
+		<if SPAM_TRAP><div style="display:none"><const S_SPAMTRAP><input type="text" name="name" size="19" autocomplete="off" /><input type="text" name="link" size="19" autocomplete="off" /></div></if>
 		<small><a href="javascript:show('options<var $thread>')"><const S_MOREOPTS></a></small>
 	</td>
 </tr>
@@ -174,14 +170,13 @@ use constant POSTING_FORM_TEMPLATE => compile_template(q{
 <tr style="display:none;vertical-align:top" id="options<var $thread>">
 	<td><const S_FORMATTING></td>
 	<td>
-		<select name="markup" onchange="select_markup(this)">
-		<option value="none" <if DEFAULT_MARKUP eq "none">selected="selected"</if>><const S_FORMAT_NONE></option>
-		<option value="waka" <if DEFAULT_MARKUP eq "waka">selected="selected"</if>><const S_FORMAT_WAKA></option>
-		<option value="html" <if DEFAULT_MARKUP eq "html">selected="selected"</if>><const S_FORMAT_HTML></option>
-		<option value="aa" <if DEFAULT_MARKUP eq "aa">selected="selected"</if>><const S_FORMAT_AA></option>
-		</select>
+		<select name="markup" onchange="select_markup(this)"><loop $markup_formats>
+		<option value="<var $id>" <if DEFAULT_MARKUP eq $id>selected="selected"</if>><var S_FORMATS-\>{$id}></option>
+		</loop></select>
 		<label><input type="checkbox" name="savemarkup" /> <const S_SAVE_FORMATTING></label>
+		&nbsp;&nbsp; <input type="button" value="Preview post" onclick="preview_post('<var $formid>','<var $thread>')" />
 		<br /><small></small>
+		<div id="preview<var $thread>" class="replytext" style="display:none">Lorem ipsum dolor</div>
 	</td>
 </tr>
 
@@ -309,7 +304,7 @@ use constant MAIN_PAGE_TEMPLATE => compile_template( GLOBAL_HEAD_INCLUDE.q{
 	</tr>
 	</tbody></table>
 	</form>
-	<script type="text/javascript">set_inputs("postform<var $thread>");</script>
+	<script type="text/javascript">set_new_inputs("postform<var $thread>");</script>
 
 	</div>
 </loop>
@@ -332,7 +327,7 @@ use constant MAIN_PAGE_TEMPLATE => compile_template( GLOBAL_HEAD_INCLUDE.q{
 
 </div></div>
 
-<script type="text/javascript">set_inputs("threadform");</script>
+<script type="text/javascript">set_new_inputs("threadform");</script>
 
 }.GLOBAL_FOOT_INCLUDE,KEEP_MAINPAGE_NEWLINES);
 
@@ -398,7 +393,7 @@ use constant THREAD_FOOT_TEMPLATE => compile_template( q{
 
 </form>
 
-<script type="text/javascript">set_inputs("postform<var $thread>");</script>
+<script type="text/javascript">set_new_inputs("postform<var $thread>");</script>
 
 </div>
 </div>

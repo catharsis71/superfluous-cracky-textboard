@@ -1,4 +1,5 @@
-AddCharset utf-8 html # If you change this, remember to change the RewriteRule entry further down, too!
+# If you change this, remember to change the RewriteRule entry further down, too!
+AddCharset utf-8 html
 
 <Files *.txt>
 Deny from all

@@ -1,4 +1,4 @@
-# wakautils.pl v7.14
+# wakautils.pl v8.1
 
 use strict;
 
@@ -9,13 +9,23 @@ my $has_md5=0;
 eval 'use Digest::MD5 qw(md5)';
 $has_md5=1 unless $@;
 
+my $has_encode=0;
+eval 'use Encode qw(decode)';
+$has_encode unless $@;
+
+
 use constant MAX_UNICODE => 1114111;
 
 #
 # HTML utilities
 #
 
-my $protocol_re=qr/(?:http|https|ftp|mailto|news|irc)/;
+my $protocol_re=qr{(?:http://|https://|ftp://|mailto:|news:|irc:)};
+my $url_re=qr{(${protocol_re}[^\s<>()"]*?(?:\([^\s<>()"]*?\)[^\s<>()"]*?)*)((?:\s|<|>|"|\.||\]|!|\?|,|&#44;|&quot;)*(?:[\s<>()"]|$))};
+
+sub protocol_regexp() { return $protocol_re }
+
+sub url_regexp() { return $url_re }
 
 sub abbreviate_html($$$)
 {
@@ -115,22 +125,24 @@ sub sanitize_html($%)
 							{
 								my $passes=1;
 
-								if($type=~/url/i) { $passes=0 unless $value=~/(?:^$protocol_re:|^[^:]+$)/ }
+								if($type=~/url/i) { $passes=0 unless $value=~/(?:^${protocol_re}|^[^:]+$)/ }
 								if($type=~/number/i) { $passes=0 unless $value=~/^[0-9]+$/  }
 
 								if($passes)
 								{
 									$value=~s/$entity_re/&amp;/g;
-
-									if($value=~/"/) { $value="'$value'" }
-									else { $value="\"$value\"" }
-
 									$args{$arg}=$value;
 								}
 							}
 						}
 
-						my $cleanargs=join " ",map { "$_=$args{$_}" } keys %args;
+						$args{$_}=$tags{$name}{forced}{$_} for (keys %{$tags{$name}{forced}}); # override forced arguments
+
+						my $cleanargs=join " ",map {
+							my $value=$args{$_};
+							$value=~s/'/%27/g;
+							"$_='$value'";
+						} keys %args;
 
 						$implicit="/" if($tags{$name}{empty});
 
@@ -149,7 +161,7 @@ sub sanitize_html($%)
 	my $entry;
 	while($entry=pop @stack) { $clean.="</$entry>" }
 
-	return clean_entities($clean);
+	return $clean;
 }
 
 sub describe_allowed(%)
@@ -214,7 +226,7 @@ sub do_wakabamark($;$$)
 		$simplify=0;
 	}
 
-	return clean_entities($res);
+	return $res;
 }
 
 sub do_spans($@)
@@ -229,8 +241,7 @@ sub do_spans($@)
 		$line=~s{ (?<![\x80-\x9f\xe0-\xfc]) (`+) ([^<>]+?) (?<![\x80-\x9f\xe0-\xfc]) \1}{push @hidden,"<code>$2</code>"; "<!--$#hidden-->"}sgex;
 
 		# make URLs into links and hide them
-		$line=~s{($protocol_re:[^\s<>"]*?)((?:\s|<|>|"|\.|\)|\]|!|\?|,|&#44;|&quot;)*(?:[\s<>"]|$))}
-		{push @hidden,"<a href=\"$1\" rel=\"nofollow\">$1\</a>"; "<!--$#hidden-->$2"}sge;
+		$line=~s{$url_re}{push @hidden,"<a href=\"$1\" rel=\"nofollow\">$1\</a>"; "<!--$#hidden-->$2"}sge;
 
 		# do <strong>
 		$line=~s{ (?<![0-9a-zA-Z\*_\x80-\x9f\xe0-\xfc]) (\*\*|__) (?![<>\s\*_]) ([^<>]+?) (?<![<>\s\*_\x80-\x9f\xe0-\xfc]) \1 (?![0-9a-zA-Z\*_]) }{<strong>$2</strong>}gx;
@@ -260,9 +271,12 @@ sub compile_template($;$)
 	my ($str,$nostrip)=@_;
 	my $code;
 
-	$str=~s/^\s+//;
-	$str=~s/\s+$//;
-	$str=~s/\n\s*/ /sg unless $nostrip;
+	unless($nostrip)
+	{
+		$str=~s/^\s+//;
+		$str=~s/\s+$//;
+		$str=~s/\n\s*/ /sg;
+	}
 
 	while($str=~m!(.*?)(<(/?)(var|const|if|loop)(?:|\s+(.*?[^\\]))>|$)!sg)
 	{
@@ -303,7 +317,7 @@ sub compile_template($;$)
 		'$$_=$__ov{$_} for(keys %__ov);'.
 		'return $res; }';
 
-	die "Template format error" unless($sub);
+	die "Template format error" unless $sub;
 
 	return $sub;
 }
@@ -328,33 +342,38 @@ sub include($)
 	return $file;
 }
 
-sub clean_string($)
+sub clean_string($;$)
 {
-	my ($str)=@_;
+	my ($str,$charset)=@_;
 
-	$str=~s/[\x00-\x08\x0b\x0c\x0e-\x1f]//g; # remove control chars
+	$str=decode_string($str,$charset);
 
-	$str=~s/&/&amp;/g;
-	$str=~s/\</&lt;/g;
+	$str=~s/&(?!#[0-9]+;|#x[0-9a-fA-F]+;)/&amp;/g; # clean up &, excluding numerical entities
+	$str=~s/\</&lt;/g; # clean up brackets for HTML tags
 	$str=~s/\>/&gt;/g;
-	$str=~s/"/&quot;/g;
+	$str=~s/"/&quot;/g; # clean up quotes for HTML attributes
 	$str=~s/'/&#39;/g;
-	$str=~s/,/&#44;/g;
+	$str=~s/,/&#44;/g; # clean up commas for some reason I forgot
 
-	# repair unicode entities
-	$str=~s/&amp;(\#[0-9]+;)/&$1/g;
-	$str=~s/&amp;(\#x[0-9a-f]+;)/&$1/gi;
-
-	return clean_entities($str);
+	return $str;
 }
 
-sub clean_entities($)
+sub decode_string($;$)
 {
-	my ($str)=@_;
+	my ($str,$charset)=@_;
+	my $use_unicode=$has_encode&&$charset;
 
-	# strip large unicode entities
-	$str=~s/&\#([0-9]+);/$1<=MAX_UNICODE?"&#$1;":""/ge;
-	$str=~s/&\#x([0-9a-f]+);/hex($1)<=MAX_UNICODE?"&#x$1;":""/gei; # haado!
+	$str=decode($charset,$str) if $use_unicode;
+
+	$str=~s{(&\#([0-9]+);|&#x([0-9a-f]+);)}{
+		my $ord=($2 or hex $3);
+		if($ord>MAX_UNICODE) { "" } # strip entities outside unicode range
+		elsif($use_unicode) { chr $ord } # if we have unicode support, convert all entities
+		elsif($ord<128) { chr $ord } # otherwise just convert ASCII-range entities
+		else { $1 } # and leave the rest as-is.
+	}gei; # haado!
+
+	$str=~s/[\x00-\x08\x0b\x0c\x0e-\x1f]//g; # remove control chars
 
 	return $str;
 }
@@ -411,7 +430,7 @@ sub js_string($)
 	$str=~s/\\/\\\\/g;
 	$str=~s/'/\\'/g;
 	$str=~s/([\x00-\x1f\x80-\xff<>&])/sprintf "\\x%02x",ord($1)/ge;
-	$str=~s/([\x{100}-\x{ffff}])/sprintf "\\u%04x",ord($1)/ge;
+	eval '$str=~s/([\x{100}-\x{ffff}])/sprintf "\\u%04x",ord($1)/ge';
 	$str=~s/(\r\n|\r|\n)/\\n/g;
 
 	return "'$str'";
@@ -441,15 +460,15 @@ use constant FORCETIME => '0.04'; 	# If the cache is less than (FORCETIME) days 
                                     # Saves everyone some bandwidth. 0.04 days is ~ 1 hour. 0.0007 days is ~ 1 min.
 use IO::Socket::INET;
 
-sub get_http($)
+sub get_http($;$$$)
 {
-	my $url=shift;
+	my ($url,$maxsize,$referer,$cacheprefix)=@_;
 	my ($host,$port,$doc)=$url=~m!^(?:http://|)([^/]+)(:[0-9]+|)(.*)$!;
 	$port=80 unless($port);
 
 	my $hash=encode_base64(rc4(null_string(6),"$host:$port$doc",0),"");
 	$hash=~tr!/+!_-!; # remove / and +
-	my $cachefile=CACHEFILE_PREFIX.($doc=~m!([^/]{0,15})$!)[0]."-$hash"; # up to 15 chars of filename
+	my $cachefile=($cacheprefix or CACHEFILE_PREFIX).($doc=~m!([^/]{0,15})$!)[0]."-$hash"; # up to 15 chars of filename
 	my ($modified,$cache);
 
 	if(open CACHE,"<",$cachefile)  # get modified date and cache contents
@@ -465,6 +484,7 @@ sub get_http($)
 	my $sock=IO::Socket::INET->new("$host:$port") or return $cache;
 	print $sock "GET $doc HTTP/1.1\r\nHost: $host\r\nConnection: close\r\n";
 	print $sock "If-Modified-Since: $modified\r\n" if $modified;
+	print $sock "Referer: $referer\r\n" if $referer;
 	print $sock "\r\n"; #finished!
 
 	# header
@@ -476,7 +496,12 @@ sub get_http($)
 	} until ($line=~/^\r?\n/);
 
 	# body
-	my $output=join "",<$sock>;
+	my ($line,$output);
+	while($line=<$sock>)
+	{
+		$output.=$line;
+		last if $maxsize and $output>=$maxsize;
+	}
 	undef $sock;
 
 	if($statuscode=="200")
@@ -939,11 +964,25 @@ sub write_array($@)
 	{
 		print $file join "\n",@array;
 	}
-	else
+	else # super-paranoid atomic write
 	{
-		open FILE,">$file" or die "Couldn't write to file \"$file\"";
-		print FILE join "\n",@array;
+		my $rndname1="__".make_random_string(12).".dat";
+		my $rndname2="__".make_random_string(12).".dat";
+		if(open FILE,">$rndname1")
+		{
+			if(print FILE join "\n",@array)
+			{
+				close FILE;
+				rename $file,$rndname2 if -e $file;
+				if(rename $rndname1,$file)
+				{
+					unlink $rndname2 if -e $rndname2;
+					return;
+				}
+			}
+		}
 		close FILE;
+		die "Couldn't write to file \"$file\"";
 	}
 }
 
@@ -953,20 +992,28 @@ sub write_array($@)
 # Spam utilities
 #
 
-sub spam_check($$)
+sub spam_check($$) # Deprecated function
 {
 	my ($text,$spamfile)=@_;
-	my @spam=read_spam_file($spamfile);
-
-	foreach (@spam) { return 1 if($text=~/\Q$_\E/) }
-	return 0;
+	return compile_spam_checker($spamfile)->($text);
 }
 
-sub read_spam_file($)
+sub compile_spam_checker(@)
 {
-	return grep { length $_ } map { s/#.*//; s/^\s+//; s/\s+$//; $_; }  read_array(shift);
-}
+	my @re=map {
+		s/#.*//; s/^\s+//; s/\s+$//; # strip perl-style comments and whitespace
+		if(!length) { () } # nothing left, skip
+		elsif(m!^/(.*)/$!) { $1 } # a regular expression
+		elsif(m!^/(.*)/([xism]+)$!) { "(?$2)$1" } # a regular expression with xism modifiers
+		else { quotemeta } # a normal string
+	} map read_array($_),@_;
 
+	return eval 'sub {
+		$_=shift;
+		study;
+		return '.(join "||",map "/$re[$_]/o",(0..$#re)).';
+	}';
+}
 
 
 #

@@ -35,6 +35,9 @@ ol p:last-child, ul p:last-child {
 input, textarea {
 	border: 1px solid #800000;
 }
+input[type=submit], input[type=button] {
+	color: #400000;
+}
 textarea {
 	-moz-border-radius: 4px;
 }
@@ -252,13 +255,13 @@ h1 {
 	padding: 1em 0.5em 1em 0.5em;
 	margin: 0.5em 2em 0.5em 2em;
 }
-#posts .replytext {
+.replytext {
 	margin: 0.5em 0em 0em 3em;
 }
-#posts .replytext > :first-child {
+.reply .replytext > :first-child {
 	margin-top: 0em;
 }
-#posts .replytext blockquote {
+.replytext blockquote {
 	margin-left: 0em;
 	color: #789922;
 }
@@ -280,7 +283,15 @@ h1 {
 	-moz-border-radius: 4px;
 	font-weight: bold;
 }
-#posts form a {
+#posts form a, #posts form small, #posts form label,
+#createbox form a, #createbox form small, #createbox form label {
+	font-weight: normal;
+}
+
+#posts form .replytext, #createbox form .replytext {
+	border: 1px dotted #800000;
+	margin: 0.5em 0;
+	padding: 0 1em;
 	font-weight: normal;
 }
 .postcaptcha {

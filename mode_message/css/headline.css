@@ -236,22 +236,23 @@ h1 {
 	padding: 1em 0.5em 1em 0.5em;
 	margin: 0.5em 2em 0.5em 2em;
 }
-#posts .replytext {
+.replytext {
 	margin: 0.7em 0em 1.5em 2em;
 }
-#posts .replytext > :first-child {
+.reply .replytext > :first-child {
 	margin-top: 0em;
 }
 #posts .allreplies .reply:first-child .replytext > :first-child:first-letter,
-#posts .firstreply .reply:first-child .replytext > :first-child:first-letter {
+#posts .firstreply .reply:first-child .replytext > :first-child:first-letter,
+#createbox form .replytext > :first-child:first-letter {
 	font-size: 1.5em;
 }
-#posts .replytext blockquote {
+.replytext blockquote {
 	font-style: italic;
 	margin-left: 0em;
 	color: #7f7f7f;
 }
-#posts .replytext blockquote em {
+.replytext blockquote em {
 	font-style: normal;
 }
 #posts .replyabbrev {
@@ -278,6 +279,13 @@ h4 {
 	font-family: sans-serif;
 	margin: 3px;
 	padding: 3px;
+}
+#posts form .replytext, #createbox form .replytext {
+	font-family: serif;
+	border: 1px dotted #000000;
+	margin: 0.5em 0;
+	padding: 0 1em;
+	background: #ffffff;
 }
 
 .postcaptcha {

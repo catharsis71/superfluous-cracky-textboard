@@ -13,8 +13,6 @@ BEGIN { require 'wakautils.pl'; }
 BEGIN { require 'kareha.pl'; }
 
 use constant KAREHA_SCRIPT => 'kareha.pl';
-use constant SHOWN_LINES => 5;
-use constant SHOWN_POSTS => 10;
 
 use constant ADMIN_HEAD_INCLUDE => q{<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
@@ -29,6 +27,8 @@ a:hover { background: #aa1133; color: #eeeeff; }
 #threadlist a { display: block; }
 th { text-align: left; }
 
+#deletecontrols { float: right; }
+
 h2 { font-size: 1.2em; margin: 2em 0 0.5em 0; padding: 0; font-family: sans-serif; }
 h2 a { text-decoration: none; color: #000000; }
 h2 a:hover { text-decoration: underline; }
@@ -42,6 +42,14 @@ h3 { font-size: 1em; margin: 0; padding: 0px; font-family: sans-serif; }
 
 .deletebutton { display:none; }
 </style>
+<script type="text/javascript">
+function banclick(link)
+{
+	var r=prompt("What's the reason for this ban?");
+	if(r) document.location=link.href+"&reason="+encodeURIComponent(r);
+	return false;
+}
+</script>
 </head>
 <body>
 <h1>Admin interface for <const TITLE></h1>
@@ -57,17 +65,29 @@ Pages: <loop template_for("page",0,(scalar(@$threads)-1)/THREADS_DISPLAYED)>
 </div>
 
 <div id="maincommands">
-<if ALLOW_ADMIN_EDIT>
-Edit: <loop $includes>
+<if @$editable>
+Edit: <loop $editable>
 	<a href="<var $self>/edit?filename=<var urlenc($filename)>"><var $filename></a>
 </loop>
 <br />
 </if>
-<a href="<var $path><const KAREHA_SCRIPT>?task=rebuild&amp;admin=<var $adminpass>">Rebuild caches</a>
+<a href="<var $path><const KAREHA_SCRIPT>?task=rebuild&amp;admin=<var $adminpass>">Rebuild caches</a> |
+<a href="<var $path><const HTML_SELF>">Return to board</a> | 
 <a href="<var $self>/logout">Log out</a>
 </div>
 
 <div id="threads">
+
+<form action="<const KAREHA_SCRIPT>" method="post">
+
+<div id="deletecontrols">
+<input type="hidden" name="task" value="delete" />
+<input type="hidden" name="password" value="<var $adminpass>" />
+<input type="hidden" name="r" value="1" />
+<input value="Delete marked posts" type="submit" />
+<label><input type="checkbox" name="fileonly" value="on" />File only</label>
+</div>
+
 <loop $shownthreads>
 	<h2><a href="<var $self>/<var $thread>/"><var $title or "Thread $thread"> (<var $postcount>)</a></h2>
 
@@ -84,16 +104,20 @@ Edit: <loop $includes>
 	<loop $posts>
 		<div class="post">
 		<div class="postcommands">
-		Posted by: <var $masked_ip>
+		<label><input type="checkbox" name="delete" value="<var $thread>,<var $num>" />
+		Posted by: <var ADMIN_MASK_IPS?$masked_ip:$ip>
 		- Password: <var $password>
+		</label>
 		- <a href="<var $path><const KAREHA_SCRIPT>?task=delete&amp;delete=<var $thread>,<var $num>&amp;password=<var $adminpass>&amp;r=1">delete</a>
 		<if $filename>- <a href="<var $path><const KAREHA_SCRIPT>?task=delete&amp;delete=<var $thread>,<var $num>&amp;fileonly=1&amp;password=<var $adminpass>&amp;r=1">delete file</a></if>
+		<if ADMIN_BAN_FILE>- <a href="<var $self>/ban?id=<var $masked_ip>" onclick="return banclick(this)">ban</a></if>
 		</div>
 		<div class="posttext"><var $abbreviation or $text></div>
 		</div>
 	</loop>
 </loop>
 </div>
+</form>
 
 <div class="navi">
 Pages: <loop template_for("page",0,(scalar(@$threads)-1)/THREADS_DISPLAYED)>
@@ -113,7 +137,7 @@ use constant EDIT_TEMPLATE => compile_template(ADMIN_HEAD_INCLUDE.q{
 <a href="<var $self>">Return</a>
 </div>
 
-<if $filename eq SPAM_FILE><p>
+<if grep $filename eq $_,SPAM_FILES><p>
 This is the list of domain names Kareha considers to be spam.<br />
 You can find an up-to-date version
 <a href="http://wakaba.c3.cx/antispam/antispam.pl?action=view&amp;format=wakaba">here</a>,
@@ -220,7 +244,8 @@ if($pass ne ENCODED_PASS)
 
 my @shownthreads;
 my $showlist;
-my ($threadnum,$ranges,$list,$edit,$logout,$page)=$ENV{PATH_INFO}=~m!/(?:([0-9]+)(?:/(.*)|)|(list)|(edit)|(logout)|p([0-9]+))!i;
+my ($threadnum,$ranges,$list,$edit,$ban,$logout,$page)=$ENV{PATH_INFO}=~
+	m!/(?:([0-9]+)(?:/(.*)|)|(list)|(edit)|(ban)|(logout)|p([0-9]+))!i;
 
 if($threadnum)
 {
@@ -232,13 +257,20 @@ elsif($list)
 }
 elsif($edit)
 {
-	die "Editing not allowed" unless(ALLOW_ADMIN_EDIT);
-
 	my $filename=$query->param("filename");
 	my $contents=$query->param("contents");
 
+	die "Not an editable file" unless grep { $_ eq $filename } (ADMIN_EDITABLE_FILES);
+
 	if(defined $contents) { do_save($filename,$contents) }
 	else { show_edit($filename) }
+}
+elsif($ban)
+{
+	my $id=$query->param("id");
+	my $reason=$query->param("reason");
+
+	do_ban($id,$reason);
 }
 elsif($logout)
 {
@@ -253,7 +285,7 @@ else
 	$end=$#threads if $end>$#threads;
 
 	show_threads(
-		map { filter_post_ranges($threads[$_],"l".SHOWN_POSTS,SHOWN_LINES) } ($start..$end)
+		map { filter_post_ranges($threads[$_],"l".ADMIN_SHOWN_POSTS,ADMIN_SHOWN_LINES) } ($start..$end)
 	);
 }
 
@@ -283,7 +315,7 @@ sub show_threads(@)
 		shownthreads=>\@shownthreads,
 		currpage=>$page,
 		adminpass=>ENCODED_PASS,
-		includes=>[map +{ filename=>$_ },(glob(INCLUDE_DIR."*"),SPAM_FILE)],
+		editable=>[map +{ filename=>$_ },(ADMIN_EDITABLE_FILES)],
 	);
 }
 
@@ -301,9 +333,6 @@ sub show_edit($)
 {
 	my ($filename)=@_;
 
-	my $include=quotemeta INCLUDE_DIR;
-	die unless $filename=~m!^$include[^/\\]+$! || $filename eq SPAM_FILE;
-
 	my $contents=join "\n",read_array($filename);
 
 	print_http_header();
@@ -318,12 +347,32 @@ sub do_save($$)
 {
 	my ($filename,$contents)=@_;
 
-	my $include=quotemeta INCLUDE_DIR;
-	die unless $filename=~m!^$include[^/\\]+$! || $filename eq SPAM_FILE;
-
 	write_array($filename,$contents);
 
 	make_http_forward($ENV{SCRIPT_NAME},ALTERNATE_REDIRECT);
+}
+
+sub do_ban($$)
+{
+	my ($id,$reason)=@_;
+	my $ip;
+
+	if($id=~/^\d+\.\d+\.\d+\.\d+$/) { $ip=$id }
+	elsif($id=~/^[0-9a-f]{8}$/i) { $ip=unmask_ip($id,make_key("mask",SECRET,32)) }
+	else { die "Invalid address specified" }
+
+	die "Banning is disabled" unless ADMIN_BAN_FILE;
+
+	open BANFILE,">>",ADMIN_BAN_FILE or die "Could not open ban file \"".ADMIN_BAN_FILE."\" for writing";
+
+	print BANFILE compile_template(ADMIN_BAN_TEMPLATE,1)->(
+		ip=>$ip,
+		reason=>$reason,
+	);
+
+	close BANFILE;
+
+	make_http_forward($ENV{HTTP_REFERER},ALTERNATE_REDIRECT);
 }
 
 sub print_http_header()
