@@ -102,13 +102,13 @@ Edit: <loop $editable>
 	<h2><a href="<var $self>/<var $thread>/"><var $title or "Thread $thread"> (<var $postcount>)</a></h2>
 
 	<div class="threadcommands">
-	<if !$permasage><a href="<var $path><const KAREHA_SCRIPT>?task=permasagethread&amp;thread=<var $thread>&amp;state=1&amp;&amp;admin=<var $adminpass>&amp;r=1">permasage</a></if>
-	<if $permasage><a href="<var $path><const KAREHA_SCRIPT>?task=permasagethread&amp;thread=<var $thread>&amp;state=0&amp;&amp;admin=<var $adminpass>&amp;r=1">unpermasage</a></if>
+	<if !$permasage><a href="<var $path><const KAREHA_SCRIPT>?task=permasagethread&amp;thread=<var $thread>&amp;state=1&amp;&amp;admin=<var $adminpass>&amp;r=1">permasage thread</a></if>
+	<if $permasage><a href="<var $path><const KAREHA_SCRIPT>?task=permasagethread&amp;thread=<var $thread>&amp;state=0&amp;&amp;admin=<var $adminpass>&amp;r=1">unpermasage thread</a></if>
 	-
-	<if !$closed><a href="<var $path><const KAREHA_SCRIPT>?task=closethread&amp;thread=<var $thread>&amp;state=1&amp;&amp;admin=<var $adminpass>&amp;r=1">close</a></if>
-	<if $closed><a href="<var $path><const KAREHA_SCRIPT>?task=closethread&amp;thread=<var $thread>&amp;state=0&amp;&amp;admin=<var $adminpass>&amp;r=1">open</a></if>
+	<if !$closed><a href="<var $path><const KAREHA_SCRIPT>?task=closethread&amp;thread=<var $thread>&amp;state=1&amp;&amp;admin=<var $adminpass>&amp;r=1">close thread</a></if>
+	<if $closed><a href="<var $path><const KAREHA_SCRIPT>?task=closethread&amp;thread=<var $thread>&amp;state=0&amp;&amp;admin=<var $adminpass>&amp;r=1">open thread</a></if>
 	-
-	<a href="<var $path><const KAREHA_SCRIPT>?task=deletethread&amp;thread=<var $thread>&amp;&amp;admin=<var $adminpass>&amp;r=1">delete</a>
+	<a href="<var $path><const KAREHA_SCRIPT>?task=deletethread&amp;thread=<var $thread>&amp;&amp;admin=<var $adminpass>&amp;r=1">delete thread</a>
 	</div>
 
 	<loop $posts>
@@ -118,9 +118,9 @@ Edit: <loop $editable>
 		Posted by: <var ADMIN_MASK_IPS?$masked_ip:$ip>
 		- Password: <var $password>
 		</label>
-		- <a href="<var $path><const KAREHA_SCRIPT>?task=delete&amp;delete=<var $thread>,<var $num>&amp;password=<var $adminpass>&amp;r=1">delete</a>
+		- <a href="<var $path><const KAREHA_SCRIPT>?task=delete&amp;delete=<var $thread>,<var $num>&amp;password=<var $adminpass>&amp;r=1">delete post</a>
 		<if $filename>- <a href="<var $path><const KAREHA_SCRIPT>?task=delete&amp;delete=<var $thread>,<var $num>&amp;fileonly=1&amp;password=<var $adminpass>&amp;r=1">delete file</a></if>
-		<if ADMIN_BAN_FILE>- <a href="<var $self>/ban?admin=<var $adminpass>&amp;id=<var $masked_ip>" onclick="return banclick(this)">ban</a></if>
+		<if ADMIN_BAN_FILE>- <a href="<var $self>/ban?admin=<var $adminpass>&amp;id=<var $masked_ip>" onclick="return banclick(this)">ban IP</a></if>
 		</div>
 		<div class="posttext"><var $abbreviation or $text></div>
 		</div>
