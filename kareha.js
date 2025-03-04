@@ -60,7 +60,7 @@ function delete_post(thread,post,file)
 		document.location=script
 		+"?task=delete"
 		+"&delete="+thread+","+post
-		+"&password="+password
+		+"&password="+encodeURIComponent(password)
 		+"&fileonly="+(fileonly?"1":"0");
 	}
 }
