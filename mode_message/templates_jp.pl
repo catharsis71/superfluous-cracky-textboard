@@ -8,41 +8,41 @@ BEGIN { require 'wakautils.pl' }
 # Interface strings
 #
 
-use constant S_NAVIGATION => 'ƒiƒr';
-use constant S_RETURN => 'ŒfŽ¦”Â‚É–ß‚é';
-use constant S_ENTIRE => 'ƒŒƒX‚ð‘S•”“Ç‚Þ';
-use constant S_LAST50 => 'ÅVƒŒƒX‚T‚O';
-use constant S_FIRST100 => 'ƒŒƒX‚P|‚P‚O‚O';
-use constant S_PREV100 => '‘O100';
-use constant S_NEXT100 => 'ŽŸ100';
-use constant S_TOP => '”Â‚Ìƒgƒbƒv';
-use constant S_BOARDLOOK => 'ƒfƒUƒCƒ“';
-use constant S_MANAGE => 'ŠÇ——p';
-use constant S_REBUILD => 'ƒLƒƒƒbƒVƒ…‚ÌÄ\’z';
-use constant S_ALLTHREADS => '‰ß‹ŽƒƒO‚Í‚±‚¿‚ç';
-use constant S_NEWTHREAD_TITLE => 'V‹KƒXƒŒƒbƒhì¬';
-use constant S_NAME => '–¼‘OF';
+use constant S_NAVIGATION => 'ãƒŠãƒ“';
+use constant S_RETURN => 'æŽ²ç¤ºæ¿ã«æˆ»ã‚‹';
+use constant S_ENTIRE => 'ãƒ¬ã‚¹ã‚’å…¨éƒ¨èª­ã‚€';
+use constant S_LAST50 => 'æœ€æ–°ãƒ¬ã‚¹ï¼•ï¼';
+use constant S_FIRST100 => 'ãƒ¬ã‚¹ï¼‘ï¼ï¼‘ï¼ï¼';
+use constant S_PREV100 => 'å‰100';
+use constant S_NEXT100 => 'æ¬¡100';
+use constant S_TOP => 'æ¿ã®ãƒˆãƒƒãƒ—';
+use constant S_BOARDLOOK => 'ãƒ‡ã‚¶ã‚¤ãƒ³';
+use constant S_MANAGE => 'ç®¡ç†ç”¨';
+use constant S_REBUILD => 'ã‚­ãƒ£ãƒƒã‚·ãƒ¥ã®å†æ§‹ç¯‰';
+use constant S_ALLTHREADS => 'éŽåŽ»ãƒ­ã‚°ã¯ã“ã¡ã‚‰';
+use constant S_NEWTHREAD_TITLE => 'æ–°è¦ã‚¹ãƒ¬ãƒƒãƒ‰ä½œæˆ';
+use constant S_NAME => 'åå‰ï¼š';
 use constant S_LINK => 'E-mail:';
-use constant S_FORCEDANON => '(‹­§“I‚É–¼–³‚µ‚É‚È‚è‚Ü‚·)';
-use constant S_CAPTCHA => 'ŒŸØ:';
-use constant S_TITLE => 'ƒ^ƒCƒgƒ‹F';
-use constant S_NEWTHREAD => 'V‹KƒXƒŒƒbƒhì¬';
-use constant S_IMAGE => '“Y•tFile:';
-use constant S_IMAGEDIM => '“Y•tFile:';
+use constant S_FORCEDANON => '(å¼·åˆ¶çš„ã«åç„¡ã—ã«ãªã‚Šã¾ã™)';
+use constant S_CAPTCHA => 'æ¤œè¨¼:';
+use constant S_TITLE => 'ã‚¿ã‚¤ãƒˆãƒ«ï¼š';
+use constant S_NEWTHREAD => 'æ–°è¦ã‚¹ãƒ¬ãƒƒãƒ‰ä½œæˆ';
+use constant S_IMAGE => 'æ·»ä»˜File:';
+use constant S_IMAGEDIM => 'æ·»ä»˜File:';
 use constant S_NOTHUMBNAIL => 'No<br />thumbnail';
-use constant S_REPLY => '‘‚«ž‚Þ';
-use constant S_LISTEXPL => 'ƒXƒŒƒbƒhƒŠƒXƒg‚Ö';
-use constant S_PREVEXPL => '‘O‚ÌƒXƒŒƒbƒh';
-use constant S_NEXTEXPL => 'ŽŸ‚ÌƒXƒŒƒbƒh';
+use constant S_REPLY => 'æ›¸ãè¾¼ã‚€';
+use constant S_LISTEXPL => 'ã‚¹ãƒ¬ãƒƒãƒ‰ãƒªã‚¹ãƒˆã¸';
+use constant S_PREVEXPL => 'å‰ã®ã‚¹ãƒ¬ãƒƒãƒ‰';
+use constant S_NEXTEXPL => 'æ¬¡ã®ã‚¹ãƒ¬ãƒƒãƒ‰';
 use constant S_LISTBUTTON => '&#9632;';
 use constant S_PREVBUTTON => '&#9650;';
 use constant S_NEXTBUTTON => '&#9660;';
-use constant S_TRUNC => 'È—ª‚³‚ê‚Ü‚µ‚½EE‘S‚Ä‚ð“Ç‚Þ‚É‚Í<a href="%s">‚±‚±</a>‚ð‰Ÿ‚µ‚Ä‚­‚¾‚³‚¢';
-use constant S_PERMASAGED => 'A‰i‹vsage';
-use constant S_POSTERNAME => '–¼‘OF';
-use constant S_DELETE => 'íœ';
-use constant S_USERDELETE => '“ŠeŽÒ‚ªíœ‚µ‚Ü‚µ‚½B';
-use constant S_MODDELETE => '‚ ‚Ú[‚ñ';
+use constant S_TRUNC => 'çœç•¥ã•ã‚Œã¾ã—ãŸãƒ»ãƒ»å…¨ã¦ã‚’èª­ã‚€ã«ã¯<a href="%s">ã“ã“</a>ã‚’æŠ¼ã—ã¦ãã ã•ã„';
+use constant S_PERMASAGED => 'ã€æ°¸ä¹…sage';
+use constant S_POSTERNAME => 'åå‰ï¼š';
+use constant S_DELETE => 'å‰Šé™¤';
+use constant S_USERDELETE => 'æŠ•ç¨¿è€…ãŒå‰Šé™¤ã—ã¾ã—ãŸã€‚';
+use constant S_MODDELETE => 'ã‚ã¼ãƒ¼ã‚“';
 use constant S_CLOSEDTHREAD => 'This thread has been closed. You cannot post in this thread any longer.';
 use constant S_SPAMTRAP => 'Leave these fields empty (spam trap): ';
 
@@ -65,31 +65,31 @@ use constant S_COL_SIZE => "File size";
 use constant S_LIST_PERMASAGED => 'permasaged';
 use constant S_LIST_CLOSED => 'closed';
 
-use constant S_FRONT => 'ŒfŽ¦”Â‚É–ß‚é';
+use constant S_FRONT => 'æŽ²ç¤ºæ¿ã«æˆ»ã‚‹';
 
 
 #
 # Error strings
 #
 
-use constant S_BADCAPTCHA => '•s³‚ÈŒŸØƒR[ƒh‚ª“ü—Í‚³‚ê‚Ü‚µ‚½';
-use constant S_UNJUST => '•s³‚È“Še‚ð‚µ‚È‚¢‚Å‰º‚³‚¢';
-use constant S_NOTEXT => '‰½‚©‘‚¢‚Ä‰º‚³‚¢';
-use constant S_NOTITLE => 'ƒ^ƒCƒgƒ‹‚ð‘‚¢‚Ä‚­‚¾‚³‚¢';
-use constant S_NOTALLOWED => 'ŠÇ—lˆÈŠO‚Í“Še‚Å‚«‚Ü‚¹‚ñ';
-use constant S_TOOLONG => '–{•¶‚ª’·‚·‚¬‚Ü‚·‚ÁI';
-use constant S_UNUSUAL => '‰½‚©•Ï‚Å‚·';
-use constant S_SPAM => 'ƒXƒpƒ€‚ð“Še‚µ‚È‚¢‚Å‰º‚³‚¢';
-use constant S_THREADCOLL => '’N‚©‚ª“¯Žž‚É“Še‚µ‚æ‚¤‚Æ‚µ‚Ü‚µ‚½B‚à‚¤ˆê“x“Še‚µ‚Ä‚­‚¾‚³‚¢';
-use constant S_NOTHREADERR => 'ƒXƒŒƒbƒh‚ª‚ ‚è‚Ü‚¹‚ñ';
-use constant S_BADDELPASS => 'ŠY“–‹LŽ–‚ªŒ©‚Â‚©‚ç‚È‚¢‚©ƒpƒXƒ[ƒh‚ªŠÔˆá‚Á‚Ä‚¢‚Ü‚·';
-use constant S_NOTWRITE => 'ƒfƒBƒŒƒNƒgƒŠ‚É‘‚«ž‚ÝŒ ŒÀ‚ª‚ ‚è‚Ü‚¹‚ñ';
-use constant S_NOTASK => 'ƒXƒNƒŠƒvƒgƒGƒ‰[Fˆ—‚ª‚ ‚è‚Ü‚¹‚ñ';
-use constant S_NOLOG => 'log.txt‚É‘‚«ž‚ß‚Ü‚¹‚ñ';
-use constant S_TOOBIG => 'ƒAƒbƒvƒ[ƒh‚ÉŽ¸”s‚µ‚Ü‚µ‚½<br />ƒTƒCƒY‚ª‘å‚«‚·‚¬‚Ü‚·<br />'.MAX_KB.'KƒoƒCƒg‚Ü‚Å';
+use constant S_BADCAPTCHA => 'ä¸æ­£ãªæ¤œè¨¼ã‚³ãƒ¼ãƒ‰ãŒå…¥åŠ›ã•ã‚Œã¾ã—ãŸ';
+use constant S_UNJUST => 'ä¸æ­£ãªæŠ•ç¨¿ã‚’ã—ãªã„ã§ä¸‹ã•ã„';
+use constant S_NOTEXT => 'ä½•ã‹æ›¸ã„ã¦ä¸‹ã•ã„';
+use constant S_NOTITLE => 'ã‚¿ã‚¤ãƒˆãƒ«ã‚’æ›¸ã„ã¦ãã ã•ã„';
+use constant S_NOTALLOWED => 'ç®¡ç†äººä»¥å¤–ã¯æŠ•ç¨¿ã§ãã¾ã›ã‚“';
+use constant S_TOOLONG => 'æœ¬æ–‡ãŒé•·ã™ãŽã¾ã™ã£ï¼';
+use constant S_UNUSUAL => 'ä½•ã‹å¤‰ã§ã™';
+use constant S_SPAM => 'ã‚¹ãƒ‘ãƒ ã‚’æŠ•ç¨¿ã—ãªã„ã§ä¸‹ã•ã„';
+use constant S_THREADCOLL => 'èª°ã‹ãŒåŒæ™‚ã«æŠ•ç¨¿ã—ã‚ˆã†ã¨ã—ã¾ã—ãŸã€‚ã‚‚ã†ä¸€åº¦æŠ•ç¨¿ã—ã¦ãã ã•ã„';
+use constant S_NOTHREADERR => 'ã‚¹ãƒ¬ãƒƒãƒ‰ãŒã‚ã‚Šã¾ã›ã‚“';
+use constant S_BADDELPASS => 'è©²å½“è¨˜äº‹ãŒè¦‹ã¤ã‹ã‚‰ãªã„ã‹ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ãŒé–“é•ã£ã¦ã„ã¾ã™';
+use constant S_NOTWRITE => 'ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã«æ›¸ãè¾¼ã¿æ¨©é™ãŒã‚ã‚Šã¾ã›ã‚“';
+use constant S_NOTASK => 'ã‚¹ã‚¯ãƒªãƒ—ãƒˆã‚¨ãƒ©ãƒ¼ï¼šå‡¦ç†ãŒã‚ã‚Šã¾ã›ã‚“';
+use constant S_NOLOG => 'log.txtã«æ›¸ãè¾¼ã‚ã¾ã›ã‚“';
+use constant S_TOOBIG => 'ã‚¢ãƒƒãƒ—ãƒ­ãƒ¼ãƒ‰ã«å¤±æ•—ã—ã¾ã—ãŸ<br />ã‚µã‚¤ã‚ºãŒå¤§ãã™ãŽã¾ã™<br />'.MAX_KB.'Kãƒã‚¤ãƒˆã¾ã§';
 use constant S_EMPTY => 'The file you tried to upload is empty.';
 use constant S_BADFORMAT => 'File format not allowed.';			# Returns error when the file is not in a supported format.
-use constant S_DUPE => 'ƒAƒbƒvƒ[ƒh‚ÉŽ¸”s‚µ‚Ü‚µ‚½<br />“¯‚¶‰æ‘œ‚ª‚ ‚è‚Ü‚· (<a href="%s">link</a>)';
+use constant S_DUPE => 'ã‚¢ãƒƒãƒ—ãƒ­ãƒ¼ãƒ‰ã«å¤±æ•—ã—ã¾ã—ãŸ<br />åŒã˜ç”»åƒãŒã‚ã‚Šã¾ã™ (<a href="%s">link</a>)';
 use constant S_DUPENAME => 'Error: A file with the same name already exists.';
 use constant S_THREADCLOSED => 'This thread is closed.';
 
