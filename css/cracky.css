@@ -1,0 +1,695 @@
+/**please don't look at this mess**/
+
+html {
+  background-attachment: fixed;
+  background-color: #6B7B8D;
+  background-image: url('../img/crop-left.png'), url('../img/crop-right.png'), url('../img/center.webp');
+  background-position: bottom left, bottom right, center 80%;
+  background-repeat: no-repeat;
+  background-size: 30%, 30%, 30%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-attachment: fixed;
+  background-color: #6B7B8D;
+  background-image: url('../img/center.webp'), url('../img/crop-left.png'), url('../img/crop-right.png'), url('../img/background.webp');
+  background-repeat: no-repeat, no-repeat, no-repeat, repeat;
+  background-size: 30%, 30%, 30%, 455px;
+  background-position: center 80%, bottom left, bottom right, top left;
+  color: #FFFFFF;
+  font-family: "Trebuchet MS", serif;
+  margin: 0;
+  min-height: calc( 100vh - 16px);
+  opacity: 0.90;
+  padding: 8px;
+  max-width: 100%
+}
+
+a {
+  color: #AFB9C5;
+}
+
+a:visited {
+  color: #9DA6B0;
+}
+
+a:hover {
+  color: #EEEEEE;
+}
+
+form {
+  margin: 0;
+}
+
+ol ul,
+ul ol,
+ul ul,
+ol ol {
+  margin-bottom: 0;
+  margin-top: 0;
+}
+
+ol p:first-child,
+ul p:first-child {
+  margin-top: 0;
+}
+
+ol p:last-child,
+ul p:last-child {
+  margin-bottom: 0;
+}
+
+.aa {
+  font-family: Mona, 'MS PGothic';
+}
+
+.outerbox,
+.backlogpage #threads {
+  clear: both;
+  color: #EEEEEE;
+  padding: 4px;
+}
+
+h1 {
+  color: #EEEEEE;
+  font-size: 2em;
+  font-weight: bold;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+
+#titlebox {
+  background-size: 33%;
+  border-radius: 25px;
+  position: relative;
+}
+
+#titlebox .threadnavigation {
+  float: right;
+  position: absolute;
+  right: 12px;
+  top: 4px;
+}
+
+#titlebox div>.threadnavigation {
+  right: 4px;
+}
+
+#rules,
+#threadbox .innerbox {
+  font-size: .8em;
+  margin: 3px;
+  margin-bottom: 1em;
+  margin-top: 1em;
+  padding: 3px;
+}
+
+#stylebox {
+  background-color: #49525D;
+  border-radius: 25px;
+  margin: -1px 0;
+  margin-bottom: 1em;
+  padding: 1px 9px;
+}
+
+#threadbox {
+  background-color: #49525D;
+  border-radius: 25px;
+  margin-bottom: 1em;
+}
+
+#threadbox .threadlink {
+  padding-right: 0.5em;
+}
+
+#threadlinks {
+  font-weight: bold;
+  text-align: right;
+}
+
+#createbox h2 {
+  background-color: #49525D;
+  color: #EEEEEE;
+  font-size: 1.2em;
+  font-weight: bold;
+  margin: 0 0 .3em 1em;
+  padding: 0;
+}
+
+#createbox form {
+  background-color: #8C9FB4;
+  color: #49525D;
+  font-size: .8em;
+  font-weight: bold;
+  margin: 3px;
+  padding: 3px;
+}
+
+#createbox input,
+#createbox textarea {
+  background-color: #EEEEEE;
+  border-bottom: 1px solid #B6C2CF;
+  border-left: 1px solid #49525D;
+  border-right: 1px solid #B6C2CF;
+  border-top: 1px solid #49525D;
+}
+
+#createbox input[type=submit],
+#createbox input[type=button] {
+  background-color: #000000;
+  color: #FFFFFF;
+  font-weight: bold;
+}
+
+.threadcaptcha {
+  color: #000000;
+}
+
+#posts {
+  text-align:center;
+}
+
+#posts .thread {
+  background-color: #49525D;
+  border-radius: 15px;
+  clear: both;
+  padding: 4px;
+}
+
+#posts .sagethread {
+  background-color: #D6E0F0;
+  clear: both;
+  margin-bottom: 2em;
+  padding: 4px;
+}
+
+#posts h2 {
+  background-color: inherit;
+  color: #EEEEEE;
+  float: left;
+  font-size: 1.2em;
+  font-weight: bold;
+  margin: 0 0 .3em 1em;
+  padding: 0;
+}
+
+#posts h2 a {
+  color: #EEEEEE;
+  text-decoration: none;
+}
+
+#posts h2 a:hover {
+  text-decoration: underline;
+}
+
+#posts h2 small {
+  font-size: .7em;
+  font-weight: normal;
+}
+
+#posts .threadnavigation {
+  float: right;
+}
+
+.threadnavigation a {
+  font-weight: bold;
+  text-decoration: none;
+}
+
+#posts .replies {
+  clear: both;
+}
+
+#posts .allreplies,
+#posts .firstreply,
+#posts .finalreplies {
+  background-color: #DDDDDD;
+  color: #000080;
+  font-size: .8em;
+  margin: 3px;
+  padding: 3px;
+}
+
+#posts .allreplies a:link,
+#posts .firstreply a:link,
+#posts .finalreplies a:link {
+  color: #49525D;
+}
+
+#posts .allreplies a:visited,
+#posts .firstreply a:visited,
+#posts .finalreplies a:visited {
+  color: #2B3037;
+}
+
+#posts .allreplies a:hover,
+#posts .firstreply a:hover,
+#posts .finalreplies a:hover {
+  color: #8C9FB4;
+}
+
+#posts .allreplies a:active,
+#posts .firstreply a:active,
+#posts .finalreplies a:active {
+  color: #8C9FB4;
+}
+
+#posts .repliesomitted {}
+
+#posts .reply {
+  clear: both;
+}
+
+#posts .deletedreply {
+  clear: both;
+  padding-bottom: 1em;
+}
+
+#posts h3 {
+  color: #000000;
+  font-size: 1em;
+  font-weight: normal;
+  margin: 0;
+  padding: 0;
+}
+
+#posts .deletedreply h3 {
+  color: #AFAFAF;
+  font-weight: bold;
+}
+
+#posts h3 .replynum {
+  color: #999999;
+  font-weight: bold;
+  margin-left: 0.3em;
+  margin-right: 0.3em;
+}
+
+#posts h3 .replynum a {
+  color: #999999;
+  text-decoration: none;
+}
+
+#posts h3 .replynum a:hover {
+  color: #EEEEEE;
+}
+
+#posts h3 .postername {
+  color: #8308bd;
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+#posts h3 .postertrip {
+  color: #d689fa;
+  font-size: 1.2em;
+  font-style: italic;
+}
+
+#posts .deletebutton {
+  font-size: small;
+  position: absolute;
+  right: 1.5em;
+}
+
+#posts img.thumb,
+#posts a img {
+  border: 1px solid #49525D;
+  float: left;
+  margin: 0.5em 2em 0.5em 1em;
+}
+
+#posts .nothumbnail {
+  background: #eeeeee;
+  border: 2px dashed #cccccc;
+  display: inline;
+  float: left;
+  margin: 0.5em 2em 0.5em 2em;
+  padding: 1em 0.5em 1em 0.5em;
+  text-align: center;
+}
+
+.replytext> :first-child {
+  margin-top: 0em;
+}
+
+.replytext> :last-child {
+  margin-bottom: 0em;
+}
+
+.replytext:after {
+  clear: both;
+  content: "";
+  display: block;
+  height: 0.1px;
+  margin: 0;
+}
+
+.replytext {
+  background-color: #FFFFFF;
+  border: 1px solid #FFFFFF;
+  margin: 3px;
+  padding: 3px;
+}
+
+.replytext blockquote {
+  color: #697685;
+  margin-left: 0em;
+}
+
+#posts .replyabbrev {
+  color: #228854;
+  margin-bottom: 0.5em;
+  margin-left: 3px;
+}
+
+#posts form {
+  background-color: #99A9BA;
+  color: #49525D;
+  font-size: .8em;
+  font-weight: bold;
+  margin: 3px;
+  padding: 3px;
+}
+
+#posts form a:link,
+#createbox form a:link {
+  color: #49525D;
+}
+
+#posts form a:visited,
+#createbox form a:visited {
+  color: #2B3037;
+}
+
+#posts form a:hover,
+#createbox form a:hover {
+  color: #EEEEEE;
+}
+
+#posts form a:active,
+#createbox form a:active {
+  color: #FFFFFF;
+}
+
+#posts input,
+#posts textarea {
+  background-color: #EEEEEE;
+  border-bottom: 1px solid #B6C2CF;
+  border-left: 1px solid #49525D;
+  border-right: 1px solid #B6C2CF;
+  border-top: 1px solid #49525D;
+}
+
+#posts input[type=submit],
+#posts input[type=button] {
+  background-color: #000000;
+  color: #FFFFFF;
+  font-weight: bold;
+}
+
+#posts form .replytext,
+#createbox form .replytext {
+  border: 6px solid #DDDDDD;
+  color: #000080;
+  font-weight: normal;
+  margin: 0.5em 0;
+}
+
+.postcaptcha {
+  color: #000000;
+}
+
+#navigation {
+  background-color: #49525D;
+  border: 1px solid #49525D;
+  border-radius: 15px;
+  float: left;
+  font-size: small;
+  margin: 0.3em 0.3em 1em 1em;
+  padding: 5px;
+  /* white-space: nowrap; */
+}
+
+#navigation strong {
+  background-color: #49525D;
+  color: #EEEEEE;
+  font-weight: bold;
+  padding: 3px;
+}
+
+#navigation a {
+  padding: 3px;
+}
+
+#oldthreadlist {
+  background-color: #FFFFFF;
+  color: #49525D;
+  font-family: serif;
+  margin: 0 auto;
+  padding: 6px;
+  width: 100%;
+}
+
+#oldthreadlist a {
+  color: #49525D;
+}
+
+#oldthreadlist a:hover {
+  color: #6B7480;
+}
+
+#oldthreadlist th {
+  text-align: left;
+}
+
+#oldthreadlist .line0 {
+  background: #FFFFFF;
+}
+
+#oldthreadlist .line1 {
+  background: #E7E7FF;
+}
+
+#oldthreadlist a {
+  display: block;
+}
+
+#footer {
+  font-size: 0.8em;
+  text-align: center;
+  width: max-content !important;
+  margin: auto;
+}
+
+.errorpage h1,
+.errorpage h2 {
+  text-align: center;
+}
+
+a:link {
+  color: #52F580;
+}
+
+a:visited {
+  color: #52F580;
+}
+
+a:hover,
+#menubar label:hover,
+[type=radio]:checked~label,
+.menuTabContent a {
+  background: #926AA9;
+  border-radius: 25px;
+  color: #000;
+}
+
+a:active {
+  color: #d00;
+}
+
+#menubar,
+.menuTabContent,
+.return,
+legend,
+#postForm label,
+.extraTitle,
+.post-head,
+.return-foot {
+  background: #222;
+  border-radius: 25px;
+  color: #fff;
+}
+
+.filesize {
+  color: #8308bd;
+}
+
+#thumb,
+.thumbVid {
+  border-radius: 15px;
+  float: left;
+}
+
+.header,
+#archivedBoard,
+#postForm fieldset,
+.extraContainer,
+.op-post,
+.reply-post,
+#userdelete,
+#userpage,
+#footer {
+  background: #333;
+  border-radius: 25px;
+  color: #fff;
+  opacity: 0.99;
+  width: auto;
+}
+
+input[type="submit"] {
+  background: #555;
+  border-color: #50ee33;
+  color: #fff;
+}
+
+button,
+input,
+textarea,
+.delcheck,
+.nothumb,
+a.nothumb:hover {
+  background: #fff;
+  border-color: #50ee33;
+  border-radius: 11px;
+  color: #000;
+  padding: 5px;
+}
+
+.threadsep {
+  background-color: #926AA9;
+  background-image: url('../img/8bitminicrackies.gif');
+  border-color: white;
+  border-radius: 11px;
+  display: block !important;
+  height: 25px;
+  width: 99%;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.threadsep-threadpagetop {
+  background-color: #926AA9;
+  background-image: url('../img/8bitminicrackies.gif');
+  border-color: white;
+  border-radius: 11px;
+  display: block !important;
+  height: 25px;
+  width: 99%;
+  margin-top: 50px;
+  margin-bottom: 20px;
+}
+
+.threadsep-threadpagebottom {
+  background-color: #926AA9;
+  background-image: url('../img/8bitminicrackies.gif');
+  border-color: white;
+  border-radius: 11px;
+  display: block !important;
+  height: 25px;
+  width: 99%;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+#postForm {
+  width: 80%;
+}
+
+#postForm textarea {
+  min-width: 50%;
+  width: auto;
+}
+
+#boardtitle {
+  background-color: #49525D;
+  border-radius: 11px;
+  padding: 5px 11px 5px 11px;
+}
+
+.ruletext {
+  background-color: #49525D;
+  border-radius: 11px;
+  padding: 5px 11px 5px 11px;
+}
+
+#createbox {
+  display: inline-block;
+  left: 50%;
+  position: relative;
+  transform: translateX(-50%);
+  max-width:100%;
+}
+
+#createbox .innerbox {
+  text-align: center;
+}
+
+#threadform {
+  text-align: left;
+}
+
+.allreplies,
+form {
+  border-radius: 11px;
+}
+
+#createbox .innerbox h2 {
+  border-radius: 11px;
+  display: inline-block;
+  padding: 5px 11px 5px 11px;
+}
+
+.thread {
+  display: inline-block;
+  margin: 0 auto;
+  text-align: left;
+  max-width: calc( 100% - 8px );
+}
+
+.deletebutton {
+  display: none;
+}
+
+table, tbody {
+  display: block;
+}
+
+textarea[name="comment"] {
+  width: calc(100% - 12px)
+}
+
+input[name="title"] {
+  width: min(100%, 293.933px)
+}
+
+pre {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+p {
+  overflow-wrap: break-word;
+}
+
+#titleimage {
+  max-width:100%
+}
+
+/* That Guy... AKA The third-rate talentless graffiti vandal, Sgt. Rock, Rock, JD, Guy Foxxx or just Fox.*/
+/* also Craig was here */
+/* Craig was here again */
+/* OH GOD MAKE IT STOP */

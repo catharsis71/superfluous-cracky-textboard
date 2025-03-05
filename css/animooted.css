@@ -1,0 +1,40 @@
+@import "cracky.css";
+@import "/common/eyebleed.php.css";
+
+#titleimagediv {
+  animation: x 5.3s linear infinite alternate;
+  width: 302px;
+  height: 302px;
+  position: fixed;
+}
+
+#titleimage {
+  animation: y 3s linear infinite alternate;
+  width: 302px;
+  height: 302px;
+  background-image: url('../img/center-anticlock.webp');
+  background-size: 302px;
+  background-repeat: no-repeat;
+}
+
+@keyframes x {
+  100% {
+    transform: translateX( calc(100vw - 302px) );
+  }
+}
+
+@keyframes y {
+  100% {
+    transform: translateY( calc(100vh - 302px) );
+  }
+}
+
+html {
+  animation: argh-my-eyes1 16s infinite;
+  background-image: url('../img/crop-left.png'), url('../img/crop-right.png'), url('../img/center-cycle.webp');
+  height: 0;
+}
+
+body {
+  background-image: url('../img/center-cycle.webp'), url('../img/crop-left.png'), url('../img/crop-right.png'), url('../img/background-grscale.webp');
+}
