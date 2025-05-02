@@ -2,15 +2,15 @@
 AddCharset utf-8 html
 
 <Files *.txt>
-Deny from all
+require all denied
 </Files>
 
 <Files config.pl>
-Deny from all
+require all denied
 </Files>
 
 <IfModule mod_headers.c>
-<Files ~ "(\.html$|(kareha|admin)\.pl)>
+<Files ~ "(\.html$|\.pl)>
   Header set Expires "Thu, 12 Oct 1989 00:00:00 GMT"
   Header set Pragma "no-cache"
   Header set Cache-Control "max-age=0; must-revalidate; no-cache"

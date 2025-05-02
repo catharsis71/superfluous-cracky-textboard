@@ -13,7 +13,9 @@ BEGIN { require "wakautils.pl"; }
 
 return 1 if(caller);
 
-
+print "Expires: Thu, 12 Oct 1989 00:00:00 GMT\n";
+print "Cache-Control: max-age=0; must-revalidate; no-cache\n";
+print "Pragma: no-cache\n";
 
 my $font_height=8;
 my %font=(
@@ -68,7 +70,7 @@ if(!$key)
 
 my $word="cute+sweet";
 
-#print "Content-Type: image/gif\n\n";
+print "Content-Type: image/gif\n\n";
 
 binmode STDOUT;
 
